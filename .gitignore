@@ -1,0 +1,6 @@
+# elf execution test
+userspace/*
+kernel/misc/elf_test.c
+
+# bootloader
+base/boot/*.bin
