@@ -1,0 +1,16 @@
+riria-kernel
+
+currently the kernel boots up and prints some stuff, not that interesting.
+
+things that work:
+- gdt/idt/irq/isr - gdt is fucky but it does the job for now
+- syscall - currently only write(4) which writes to stdout
+- elf execution -stupidly basic but it works
+
+things that doesnt work:
+- pmm
+- vmm + paging
+- malloc and family
+
+license:
+ISC License

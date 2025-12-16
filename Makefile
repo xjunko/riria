@@ -51,13 +51,15 @@ $(TMP_OBJ)/%.o: kernel/%.S
 $(TMP_OBJ)/lib/%.o: lib/%.c
 	$(MAKE) -C lib TMP_OBJ=$(TMP_OBJ)
 
-LIB_OBJS := $(patsubst lib/%.c,$(TMP_OBJ)/lib/%.o,$(wildcard lib/*.c))
-OBJS = $(KERNEL_OBJS) $(KERNEL_ASMOBJS) $(LIB_OBJS)
+OBJS = $(KERNEL_OBJS) $(KERNEL_ASMOBJS)
 
-$(BASE)/boot/kernel.bin: kernel/link.ld $(OBJS)
-	$(CC) -T $< $(KERNEL_CFLAGS) -static -o $@ ${OBJS} -lgcc
+lib/libriria.a: 
+	$(MAKE) -C lib TMP_OBJ=$(TMP_OBJ)
 
-$(TMP_FINAL)/image.iso: $(TMP_OBJ) $(BASE)/boot/kernel.bin
+$(BASE)/boot/kernel.bin: kernel/link.ld $(OBJS) lib/libriria.a
+	$(CC) -T $< $(KERNEL_CFLAGS) -static -o $@ ${OBJS} -lgcc ./lib/libriria.a
+
+$(TMP_FINAL)/image.iso: $(TMP_OBJ) $(BASE)/boot/kernel.bin 
 	mkdir -p $(TMP_ISO)/
 	mkdir -p $(TMP_ISO)/boot/
 	mkdir -p $(TMP_ISO)/boot/grub/
@@ -83,3 +85,4 @@ clean:
 	rm -rf $(TMP_ISO)
 	rm -rf $(TMP_OBJ)
 	rm -rf $(TMP_FINAL)/image.iso
+	$(MAKE) -C lib clean
