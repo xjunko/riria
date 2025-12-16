@@ -72,5 +72,5 @@ static void write_tss(uint32_t num, uint16_t ss0, uint32_t esp0) {
 
 void tss_set_stack(uintptr_t stack) {
   gdt.tss.esp0 = stack;
-  printk("[cpu] Kernel stack for TSS: 0x%x\n", stack);
+  printk("[cpu] TSS.ESP0=0x%x\n", stack);
 }

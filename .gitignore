@@ -2,5 +2,8 @@
 userspace/*
 kernel/misc/elf_test.c
 
+# lib
+*.a
+
 # bootloader
 base/boot/*.bin

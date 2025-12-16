@@ -6,11 +6,14 @@
 #include <riria/cpu/tss.h>
 #include <riria/elf.h>
 #include <riria/framebuffer.h>
+#include <riria/kmalloc.h>
 #include <riria/libk.h>
 #include <riria/ps2.h>
 #include <riria/serial.h>
 
 #include "misc/elf_test.c"
+
+extern void* end;
 
 int kmain(uint32_t mb_magic, uint32_t mb_info) {
   serial_install();  // will be used for printk
@@ -27,11 +30,24 @@ int kmain(uint32_t mb_magic, uint32_t mb_info) {
   irq_install();
   isr_install();
 
+  uintptr_t last_end = (uintptr_t)&end;
+  if ((uintptr_t)mb_info > last_end) {
+    uint32_t mb2_size = *(uint32_t*)mb_info;
+
+    printk("[mem] mb_info is bigger than kernel's end\n");
+    printk("[mem] mb_info=0x%x (sz=0x%x) > cur_end=0x%x \n", (uintptr_t)mb_info,
+           mb2_size, last_end);
+
+    last_end = (uintptr_t)mb_info + mb2_size;
+    printk("[mem] last_end=0x%x \n", last_end);
+  }
+
+  // NOTE: this will probably collide with tss_set_stack
+  kmalloc_start_at(last_end);
+
   // TODO: hardcoded, refer to how toaruos does it.
-  // Set up kernel stack for returning from user mode
-  extern uint32_t end;  // defined in linker script
   uint32_t kernel_stack =
-      ((uint32_t)&end + 0x4000) & ~0xF;  // 16KB after kernel end, aligned
+      ((uint32_t)&last_end + 0x4000) & ~0xF;  // 16KB after kernel end, aligned
   tss_set_stack(kernel_stack);
 
   // drivers
