@@ -12,5 +12,9 @@ things that doesnt work:
 - vmm + paging
 - malloc and family
 
+credits:
+i would like to credit to these projects for making this possible in the first place
+- https://github.com/klange/toaru-nih | most of internal are based off toaru-nih (not the main ToaruOS).
+
 license:
 ISC License
