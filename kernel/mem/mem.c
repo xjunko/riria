@@ -56,25 +56,26 @@ void paging_initialize(void) {
   kernel_directory.physical_tables[0] =
       (uint32_t)&first_table | PG_PRESENT | PG_RW;
 
-  // toy attempt
-  // this should make 0xDEADBEEF point to frame 0x0
-  uintptr_t phys_addr_test = 0xDEADBEEF;
-  phys_addr_test /= 0x1000;
-  uint32_t table_idx = phys_addr_test / 1024;
-  uint32_t page_idx = phys_addr_test % 1024;
-  printk("[mem] 0xDEADBEEF table_idx=%d page_idx=%d \n", table_idx, page_idx);
+  // // toy attempt
+  // // this should make 0xDEADBEEF point to frame 0x0
+  // uintptr_t phys_addr_test = 0xDEADBEEF;
+  // phys_addr_test /= 0x1000;
+  // uint32_t table_idx = phys_addr_test / 1024;
+  // uint32_t page_idx = phys_addr_test % 1024;
+  // printk("[mem] 0xDEADBEEF table_idx=%d page_idx=%d \n", table_idx,
+  // page_idx);
 
-  uint32_t test_table_phys_addr;
-  page_table_t* test_table = (page_table_t*)kmalloc_aligned(
-      sizeof(page_table_t), (uintptr_t*)&test_table_phys_addr);
+  // uint32_t test_table_phys_addr;
+  // page_table_t* test_table = (page_table_t*)kmalloc_aligned(
+  //     sizeof(page_table_t), (uintptr_t*)&test_table_phys_addr);
 
-  test_table->pages[page_idx].present = 1;
-  test_table->pages[page_idx].rw = 1;
-  test_table->pages[page_idx].frame = 0x0;
+  // test_table->pages[page_idx].present = 1;
+  // test_table->pages[page_idx].rw = 1;
+  // test_table->pages[page_idx].frame = 0x0;
 
-  kernel_directory.tables[table_idx] = test_table;
-  kernel_directory.physical_tables[table_idx] =
-      test_table_phys_addr | PG_PRESENT | PG_RW;
+  // kernel_directory.tables[table_idx] = test_table;
+  // kernel_directory.physical_tables[table_idx] =
+  // test_table_phys_addr | PG_PRESENT | PG_RW;
 
   // lastly
   kernel_directory.physical_address = (uint32_t)&kernel_directory;
