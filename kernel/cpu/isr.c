@@ -59,9 +59,12 @@ void isr_install(void) {
   idt_set_gate(0x80, _isr128, 0x08, 0xEE);
   isr_install_handler(0x80, syscall_handler);
 
-  //   for (int i = 0; i <= ISR_COUNT; i++) {
-  //     idt_set_gate(isrs[i].idx, isrs[i].stub, 0x08, 0x8E);
-  //   }
+  // FIXME: optimally i would enable all but for now just set the ones i need
+  idt_set_gate(14, _isr14, 0x08, 0x8E);  // page fault
+
+  // for (int i = 0; i <= ISR_COUNT; i++) {
+  //   idt_set_gate(isrs[i].idx, isrs[i].stub, 0x08, 0x8E);
+  // }
 }
 
 void isr_handler(regs_t* r) {
