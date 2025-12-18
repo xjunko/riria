@@ -46,7 +46,7 @@ int kmain(uint32_t mb_magic, uint32_t mb_info) {
   kmalloc_start_at(last_end);
 
   // paging
-  paging_initialize();
+  paging_initialize(0x1000000);  // assume 16MB RAM for now
   paging_finalize();
 
   // TODO: hardcoded, refer to how toaruos does it.

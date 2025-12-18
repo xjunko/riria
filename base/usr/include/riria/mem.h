@@ -37,7 +37,19 @@ typedef struct page_directory {
   uintptr_t physical_address;
 } page_directory_t;
 
-void paging_initialize(void);
+// bitmap
+void set_frame(uintptr_t);
+void clear_frame(uintptr_t);
+uint32_t test_frame(uintptr_t);
+uint32_t first_frame(void);
+uint32_t first_n_frames(int);
+void alloc_frame(page_t*, int, int);
+
+void page_set_address(page_t*, uintptr_t, int, int);
+void page_free(page_t*);
+page_t* page_get(uintptr_t, int, page_directory_t*);
+
+void paging_initialize(uint32_t);
 void paging_load_directory(page_directory_t*);
 void paging_finalize(void);
 
