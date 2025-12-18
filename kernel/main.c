@@ -6,8 +6,8 @@
 #include <riria/cpu/tss.h>
 #include <riria/elf.h>
 #include <riria/framebuffer.h>
-#include <riria/kmalloc.h>
 #include <riria/libk.h>
+#include <riria/mem.h>
 #include <riria/ps2.h>
 #include <riria/serial.h>
 
@@ -45,6 +45,10 @@ int kmain(uint32_t mb_magic, uint32_t mb_info) {
   // NOTE: this will probably collide with tss_set_stack
   kmalloc_start_at(last_end);
 
+  // paging
+  paging_initialize();
+  paging_finalize();
+
   // TODO: hardcoded, refer to how toaruos does it.
   uint32_t kernel_stack =
       ((uint32_t)&last_end + 0x4000) & ~0xF;  // 16KB after kernel end, aligned
@@ -68,6 +72,12 @@ int kmain(uint32_t mb_magic, uint32_t mb_info) {
 
   // try calling 0x80
   // asm volatile("int $0x80");
+
+  // try accessing invalid memory
+  uint32_t* invalid_ptr = (uint32_t*)0xDEADBEEF;
+  // should page_fault here.
+  uint32_t val = *invalid_ptr;
+  printk("invalid read returned 0x%x\n", val);
 
   while (1) {
   }
