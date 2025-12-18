@@ -36,7 +36,9 @@ void framebuffer_install(uint32_t mb_info) {
     uint32_t* pix = (uint32_t*)fb_info.addr;
     for (uint32_t y = 0; y < fb_info.height; y++) {
       for (uint32_t x = 0; x < fb_info.width; x++) {
-        pix[y * (fb_info.pitch / 4) + x] = 0x00FFFFFF;  // ARGB
+        // color based on position
+        pix[y * (fb_info.pitch / 4) + x] =
+            0xFFFF0000 | ((x & 0xFF) << 16) | ((y & 0xFF) << 8);
       }
     }
   }
