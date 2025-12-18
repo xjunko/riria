@@ -46,13 +46,8 @@ int kmain(uint32_t mb_magic, uint32_t mb_info) {
   kmalloc_start_at(last_end);
 
   // paging
-  paging_initialize(0x1000000);  // assume 16MB RAM for now
+  paging_initialize(0x400000);  // assume 4MB RAM for now
   paging_finalize();
-
-  // TODO: hardcoded, refer to how toaruos does it.
-  uint32_t kernel_stack =
-      ((uint32_t)&last_end + 0x4000) & ~0xF;  // 16KB after kernel end, aligned
-  tss_set_stack(kernel_stack);
 
   // drivers
   framebuffer_install(mb_info);
@@ -65,6 +60,10 @@ int kmain(uint32_t mb_magic, uint32_t mb_info) {
   printk("string = %s\n", "hell yeah brother");
 
   // try loading the elf
+  // TODO: hardcoded, refer to how toaruos does it.
+  // uint32_t kernel_stack = ((uint32_t)&last_end + 0x1000000 + 0x8000) &
+  //                         ~0xF;  // 16KB after kernel end, aligned
+  // tss_set_stack(kernel_stack);
   // printk("[elf] loading test ELF...\n");
   // printk("[elf] length is %d bytes\n", sizeof(test_elf));
   // load_elf(test_elf);

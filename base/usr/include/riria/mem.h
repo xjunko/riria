@@ -5,7 +5,9 @@
 
 // pmm
 void kmalloc_start_at(uintptr_t);
+
 void* kmalloc(size_t);
+void* kmalloc_real(size_t, int, uintptr_t*);
 void* kmalloc_aligned(size_t, uintptr_t*);
 
 // vmm
@@ -36,6 +38,8 @@ typedef struct page_directory {
   page_table_t* tables[1024];
   uintptr_t physical_address;
 } page_directory_t;
+
+extern page_directory_t* kernel_directory;
 
 // bitmap
 void set_frame(uintptr_t);

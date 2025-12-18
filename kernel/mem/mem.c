@@ -8,14 +8,34 @@
 // pmm
 extern void* end;
 uintptr_t bump_ptr = (uintptr_t)&end;
+uintptr_t heap_end = 0;
 
 void kmalloc_start_at(uintptr_t addr) { bump_ptr = addr; }
 
-void* kmalloc(size_t sz) {
+void* kmalloc_real(size_t sz, int should_align, uintptr_t* phys_addr) {
+  // heap
+  if (heap_end) {
+    void* addr;
+    printk("[mem] kmalloc heap!");
+    while (1) asm volatile("hlt");
+  }
+
+  // bump
+  if (should_align && (bump_ptr & 0xFFFFF000)) {
+    bump_ptr &= 0xFFFFF000;
+    bump_ptr += 0x1000;
+  }
+
+  if (phys_addr) {
+    *phys_addr = bump_ptr;
+  }
+
   uintptr_t addr = bump_ptr;
   bump_ptr += sz;
   return (void*)addr;
 }
+
+void* kmalloc(size_t sz) { return kmalloc_real(sz, 0, NULL); }
 
 void* kmalloc_aligned(size_t sz, uintptr_t* phys_addr) {
   if (bump_ptr &= 0xFFFFF000) {
@@ -32,10 +52,7 @@ void* kmalloc_aligned(size_t sz, uintptr_t* phys_addr) {
 }
 
 // vmm
-page_directory_t kernel_directory __attribute__((aligned(4096)));
-page_table_t first_table __attribute__((aligned(4096)));  // first 4mb
-
-page_directory_t* kernel_directory2;
+page_directory_t* kernel_directory;
 
 #define INDEX_FROM_BIT(x) (x / 0x20)
 #define OFFSET_FROM_BIT(x) (x % 0x20)
@@ -113,6 +130,8 @@ uint32_t first_n_frames(int n) {
 
 /// sets the page rw and user/kernel flags, allocates a frame if not yet
 void alloc_frame(page_t* page, int is_kernel, int is_rw) {
+  printk("[mem] alloc_frame\n");
+
   if (page->frame != 0) {
     page->present = 1;
     page->rw = (is_rw == 1) ? 1 : 0;
@@ -127,12 +146,14 @@ void alloc_frame(page_t* page, int is_kernel, int is_rw) {
   }
 }
 
+/// gets the page for an address, creates one if `make` is set
 page_t* page_get(uintptr_t addr, int make, page_directory_t* dir) {
   addr /= 0x1000;
   uint32_t table_idx = addr / 1024;
   if (dir->tables[table_idx]) {
     return &dir->tables[table_idx]->pages[addr % 1024];
   } else if (make) {
+    printk("[mem] page_get addr=0x%x make=%d\n", addr, make);
     uint32_t temp_addr;  // using uin32_t here because a page is about 32 bit.
     dir->tables[table_idx] = (page_table_t*)kmalloc_aligned(
         sizeof(page_table_t), (uintptr_t*)&temp_addr);
@@ -171,9 +192,9 @@ void paging_initialize(uint32_t mem_sz) {
   frames = (uint32_t*)kmalloc(INDEX_FROM_BIT(nframes * 8));
   memset(frames, 0, INDEX_FROM_BIT(nframes * 8));
 
-  kernel_directory2 =
+  kernel_directory =
       (page_directory_t*)kmalloc_aligned(sizeof(page_directory_t), 0);
-  memset(kernel_directory2, 0, sizeof(page_directory_t));
+  memset(kernel_directory, 0, sizeof(page_directory_t));
 }
 
 void paging_load_directory(page_directory_t* dir) {
@@ -189,24 +210,28 @@ static void paging_enable(void) {
 
 void paging_finalize(void) {
   // set the null page to not present
-  page_get(0, 1, kernel_directory2)->present = 0;
+  page_get(0, 1, kernel_directory)->present = 0;
   set_frame(0);
 
   // identity mapping the first 4MB
   for (uint32_t i = 0; i < 0x400000; i += 0x1000) {
-    page_set_address(page_get(i, 1, kernel_directory2), i, 1, 0);
+    page_set_address(page_get(i, 1, kernel_directory), i, 1, 0);
   }
 
-  // test mapping 0xDEADEEF
-  // seemed to work
-  // page_set_address(page_get(0xDEADBEEF, 1, kernel_directory2), 0x0, 1, 0);
+  // map the framebuffer, will only work on mb2 1280x720x32
+  for (uint32_t i = 0xfe000000; i < 0xfe400000; i += 0x1000) {
+    page_set_address(page_get(i, 1, kernel_directory), i, 1, 1);
+  }
 
-  kernel_directory2->physical_address =
-      (uintptr_t)kernel_directory2->physical_tables;
+  kernel_directory->physical_address =
+      (uintptr_t)kernel_directory->physical_tables;
 
   isr_install_handler(14, paging_fault);
-  paging_load_directory(kernel_directory2);
+  paging_load_directory(kernel_directory);
   paging_enable();
+
+  // HACK
+  heap_end = (bump_ptr + 0x1000) & ~0xFFF;
 }
 
 void paging_fault(regs_t* r) {
