@@ -13,7 +13,32 @@ static void reverse(char* str, int len) {
   }
 }
 
+static int utoa(uint32_t value, char* str, int base) {
+  int i = 0;
+
+  if (value == 0) {
+    str[i++] = '0';
+    str[i] = '\0';
+    return i;
+  }
+
+  while (value != 0) {
+    uint32_t rem = value % base;
+    str[i++] = (rem < 10) ? ('0' + rem) : ('a' + rem - 10);
+    value /= base;
+  }
+
+  str[i] = '\0';
+  reverse(str, i);
+  return i;
+}
+
 static int itoa(int value, char* str, int base) {
+  if (base != 10) {
+    // unlikely to work with itoa, so use utoa for that
+    return utoa((uint32_t)value, str, base);
+  }
+
   int i = 0;
   int is_negative = 0;
 
@@ -23,15 +48,15 @@ static int itoa(int value, char* str, int base) {
     return i;
   }
 
-  if (value < 0 && base == 10) {
+  if (value < 0) {
     is_negative = 1;
     value = -value;
   }
 
   while (value != 0) {
-    int rem = value % base;
-    str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
-    value /= base;
+    int rem = value % 10;
+    str[i++] = '0' + rem;
+    value /= 10;
   }
 
   if (is_negative) str[i++] = '-';
