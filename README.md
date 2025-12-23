@@ -20,6 +20,8 @@ this is a very poor attempt at making an operating system, you should take every
     - super basic, but it works now.
 - malloc and family
     - we have kmalloc and kfree, good enough.
+- vfs + devfs
+    - /dev/stdout and /dev/zero, good enough.
 
 ### things that doesnt work:
 - elf exec

@@ -52,8 +52,8 @@ void kmain(void) {
   asm volatile("int $33");  // ack 1
   asm volatile("int $0x80"
                :
-               : "a"(4), "b"(1), "c"("Hello, Riria!\n"),
-                 "d"(15));  // syscall write(4) to serial(1)
+               : "a"(4), "b"(1), "c"("hello, from syscall!\n"),
+                 "d"(22));  // syscall write(4) to serial(1)
 
   kprintf("[sys] halted.\n");
 
