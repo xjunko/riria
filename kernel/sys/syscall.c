@@ -7,9 +7,9 @@
 // impl
 #define SYSCALL_WRITE 4
 int syscall_write(regs_t* r) {
-  int fd = r->ebx;
-  char* buf = (char*)r->ecx;
-  size_t len = r->edx;
+  int fd = r->rbx;
+  char* buf = (char*)r->rcx;
+  size_t len = r->rdx;
 
   if (fd == 1) {
     for (size_t i = 0; i < len; i++) {
@@ -23,11 +23,11 @@ int syscall_write(regs_t* r) {
 }
 
 void syscall_handler(regs_t* r) {
-  switch (r->eax) {
+  switch (r->rax) {
     case SYSCALL_WRITE:
-      r->eax = syscall_write(r);
+      r->rax = syscall_write(r);
       break;
     default:
-      printk("[sys] unknown syscall: %d\n", r->eax);
+      printk("[sys] unknown syscall: %d\n", r->rax);
   }
 }

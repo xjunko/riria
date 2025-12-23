@@ -13,9 +13,10 @@ void idt_set_gate(uint8_t num, idt_gate base, uint16_t segment_selector,
                   uint8_t flags) {
   ENTRY(num).segment_selector = segment_selector;
 
-  ENTRY(num).base_low = (uint16_t)base;
-  ENTRY(num).base_middle = ((uint16_t)base >> 16);
-  ENTRY(num).base_high = ((uint32_t)base >> 32);
+  uintptr_t addr = (uintptr_t)base;
+  ENTRY(num).base_low = (uint16_t)(addr & 0xFFFF);
+  ENTRY(num).base_middle = (uint16_t)((addr >> 16) & 0xFFFF);
+  ENTRY(num).base_high = (uint32_t)((addr >> 32) & 0xFFFFFFFF);
 
   ENTRY(num).ist = 0;
   ENTRY(num).flags = flags;

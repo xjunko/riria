@@ -27,23 +27,21 @@ static volatile int sync_depth = 0;
 
 // https://github.com/klange/toaru-nih/blob/master/kernel/cpu/irq.c#L46
 void int_disable(void) {
-  // FIXME: 64bit conversion
-  // uint32_t flags;
-  // asm volatile(
-  //     "pushf\n\t"
-  //     "pop %%eax\n\t"
-  //     "movl %%eax, %0\n\t"
-  //     : "=r"(flags)
-  //     :
-  //     : "%eax");
+  INTERRUPT_STOP();
 
-  // INTERRUPT_STOP();
+  uint64_t flags;
+  asm volatile(
+      "pushfq\n\t"
+      "popq %0\n\t"
+      : "=r"(flags)
+      :
+      : "memory");
 
-  // if (flags & (1 << 9)) {
-  //   sync_depth = 1;
-  // } else {
-  //   sync_depth++;
-  // }
+  if (flags & (1ULL << 9)) {
+    sync_depth = 1;
+  } else {
+    sync_depth++;
+  }
 }
 
 // https://github.com/klange/toaru-nih/blob/master/kernel/cpu/irq.c#L68
@@ -115,6 +113,8 @@ static void irq_remap(void) {
   // 8086 mode
   outb_p(PIC1_DATA, 0x01);
   outb_p(PIC2_DATA, 0x01);
+
+  printk("[irq] PIC remapped to 0x%x and 0x%x\n", PIC1_OFFSET, PIC2_OFFSET);
 }
 
 static void irq_setup_gates(void) {
@@ -124,35 +124,54 @@ static void irq_setup_gates(void) {
 }
 
 void irq_install(void) {
-  // FIXME:
-  // IRQ_SET(0);
-  // IRQ_SET(1);
-  // IRQ_SET(2);
-  // IRQ_SET(3);
-  // IRQ_SET(4);
-  // IRQ_SET(5);
-  // IRQ_SET(6);
-  // IRQ_SET(7);
-  // IRQ_SET(8);
-  // IRQ_SET(9);
-  // IRQ_SET(10);
-  // IRQ_SET(11);
-  // IRQ_SET(12);
-  // IRQ_SET(13);
-  // IRQ_SET(14);
-  // IRQ_SET(15);
-  // irq_remap();
-  // irq_setup_gates();
+  irq_remap();
+
+  printk("[irq] IRQ INIT...");
+  IRQ_SET(0);
+  IRQ_SET(1);
+  IRQ_SET(2);
+  IRQ_SET(3);
+  IRQ_SET(4);
+  IRQ_SET(5);
+  IRQ_SET(6);
+  IRQ_SET(7);
+  IRQ_SET(8);
+  IRQ_SET(9);
+  IRQ_SET(10);
+  IRQ_SET(11);
+  IRQ_SET(12);
+  IRQ_SET(13);
+  IRQ_SET(14);
+  IRQ_SET(15);
+  irq_setup_gates();
+  printk(" OK!\n");
 }
 
 void irq_ack(int irq_no) {
+  printk("[irq] ack IRQ=%d\n", irq_no);
+
   if (irq_no >= 8) {
     outb(PIC2_COMMAND, PIC_EOI);
   }
   outb(PIC1_COMMAND, PIC_EOI);
 }
 
+// static void print_regs(regs_t* r) {
+//   printk("[irq] err_code=%d int_no=%d\n", r->err_code, r->int_no);
+//   printk("[irq] rax=0x%x rbx=0x%x rcx=0x%x rdx=0x%x\n", r->rax, r->rbx,
+//   r->rcx,
+//          r->rdx);
+//   printk("[irq] rsi=0x%x rdi=0x%x rbp=0x%x\n", r->rsi, r->rdi, r->rbp);
+//   printk("[irq] r8=0x%x r9=0x%x r10=0x%x r11=0x%x\n", r->r8, r->r9, r->r10,
+//          r->r11);
+//   printk("[irq] r12=0x%x r13=0x%x r14=0x%x r15=0x%x\n", r->r12, r->r13,
+//   r->r14,
+//          r->r15);
+// }
+
 void irq_handler(regs_t* r) {
+  printk("[irq] irq_handler called for int_no=0x%x\n", r->int_no);
+
   int_disable();
   if (r->int_no <= 47 && r->int_no >= 32) {
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
@@ -167,4 +186,5 @@ void irq_handler(regs_t* r) {
   }
 done:
   int_resume();
+  printk("[irq] irq_handler finished for int_no=0x%x\n", r->int_no);
 }

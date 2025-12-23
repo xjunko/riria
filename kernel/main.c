@@ -24,7 +24,7 @@ void kmain(void) {
   // bare minimum
   gdt_install();
   idt_install();
-  // irq_install();
+  irq_install();
   // isr_install();
 
   // uintptr_t last_end = (uintptr_t)&end;
@@ -76,7 +76,7 @@ void kmain(void) {
   // uint32_t val = *invalid_ptr;
   // printk("invalid read returned 0x%x\n", val);
 
-  // asm volatile("int $32");
+  asm volatile("int $35");
   printk("[sys] halted.\n");
   while (1) {
   }
