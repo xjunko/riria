@@ -16,12 +16,12 @@ this is a very poor attempt at making an operating system, you should take every
     - tss is hacky, but its fine for now.
 - syscall 
     - currently only write(4) which writes to stdout to get the ball rolling
-- pmm
-    - useless without vmm + paging
+- pmm + vmm + paging
+    - super basic, but it works now.
+- malloc and family
+    - we have kmalloc and kfree, good enough.
 
 ### things that doesnt work:
-- vmm + paging
-- malloc and family
 - elf exec
 - userland
 - scheduling
