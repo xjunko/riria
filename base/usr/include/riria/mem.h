@@ -6,5 +6,5 @@
 #define VMM_HIGHER_HALF (hhdm_request.response->offset)
 
 void pmm_install(void);
-void* pmm_alloc(void);
+void* pmm_allocate(void);
 void pmm_free(void*);
