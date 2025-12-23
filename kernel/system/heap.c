@@ -213,7 +213,7 @@ void kfree(void* ptr) {
   freed->size = block_size;
 
   if (prev == NULL) {
-    freed->next = heap_start;
+    freed->next = heap_head;
     heap_head = freed;
   } else {
     freed->next = prev->next;
