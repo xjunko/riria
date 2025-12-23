@@ -2,8 +2,7 @@
 #include <riria/cpu/regs.h>
 #include <riria/libk.h>
 #include <riria/mem.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <riria/types.h>
 
 // pmm
 extern void* end;

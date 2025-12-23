@@ -2,8 +2,7 @@
 #include <riria/cpu/regs.h>
 #include <riria/libk.h>
 #include <riria/serial.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <riria/types.h>
 
 // impl
 #define SYSCALL_WRITE 4

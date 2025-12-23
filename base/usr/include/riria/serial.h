@@ -1,6 +1,5 @@
 #pragma once
-#include <stddef.h>
-#include <stdint.h>
+#include <riria/types.h>
 
 void serial_install(void);
 void serial_write(char);

@@ -10,19 +10,16 @@
 #include <riria/mem.h>
 #include <riria/ps2.h>
 #include <riria/serial.h>
+#include <riria/types.h>
 
 extern void* end;
 
 // FIXME: 64bit conversion
 void kmain(void) {
   serial_install();  // will be used for printk
-  printk("[kernel] booted!\n");
+  printk("[sys] booted!\n");
 
-  // // check if stuff went wrong
-  // if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-  //   printk("[boot] invalid bootloader header, halting. \n");
-  //   while (1) asm volatile("hlt");
-  // }
+  boot_verify();
 
   // // bare minimum
   // gdt_install();

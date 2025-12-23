@@ -1,7 +1,6 @@
 #pragma once
 #include <riria/cpu/regs.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <riria/types.h>
 
 // pmm
 void kmalloc_start_at(uintptr_t);

@@ -1,6 +1,5 @@
 #pragma once
-#include <stddef.h>
-#include <stdint.h>
+#include <riria/types.h>
 
 typedef struct tss_entry {
   uint32_t prev_tss;

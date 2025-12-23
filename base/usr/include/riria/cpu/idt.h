@@ -1,6 +1,5 @@
 #pragma once
-#include <stddef.h>
-#include <stdint.h>
+#include <riria/types.h>
 
 typedef struct idt_entry {
   uint16_t base_low;

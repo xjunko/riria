@@ -2,8 +2,7 @@
 #include <riria/cpu/io.h>
 #include <riria/cpu/irq.h>
 #include <riria/libk.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <riria/types.h>
 
 #define PIC1 0x20
 #define PIC1_COMMAND PIC1

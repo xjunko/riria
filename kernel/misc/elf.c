@@ -1,7 +1,6 @@
 #include <riria/elf.h>
 #include <riria/libk.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <riria/types.h>
 
 // Load ELF into memory
 void load_elf(uint8_t* elf) {

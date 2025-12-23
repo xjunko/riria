@@ -1,8 +1,7 @@
 #include <riria/cpu/gdt.h>
 #include <riria/cpu/tss.h>
 #include <riria/libk.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <riria/types.h>
 
 static struct {
   gdt_entry_t entries[6];

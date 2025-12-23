@@ -1,12 +1,12 @@
 #pragma once
 #include <riria/cpu/regs.h>
-#include <stddef.h>
+#include <riria/types.h>
 
 #define ISR(ISR) extern void _isr##ISR(void)
 #define ISR_SET(ISR)   \
   isrs[ISR].idx = ISR; \
   isrs[ISR].stub = _isr##ISR
-typedef void (*isr_callback)(struct regs *);
+typedef void (*isr_callback)(struct regs*);
 
 // bit cursed but, whatever.
 ISR(0);
