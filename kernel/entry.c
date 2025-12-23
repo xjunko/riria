@@ -69,7 +69,7 @@ void kmain(void) {
   // check if the buffer is zeroed
   for (int i = 0; i < 16; i++) {
     if (((uint8_t*)buffer)[i] != 0) {
-      panic("dev/zero read failed");
+      panic("/dev/zero test failed!");
     }
   }
 
