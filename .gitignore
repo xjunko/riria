@@ -7,3 +7,4 @@ kernel/misc/elf_test.c
 
 # bootloader
 base/boot/*.bin
+base/boot/limine/repo/*

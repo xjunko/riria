@@ -32,5 +32,5 @@ typedef struct tss_entry {
   uint16_t iomap_base;
 } __attribute__((packed)) tss_entry_t;
 
-void tss_set_stack(uint32_t esp0);
+void tss_set_stack(uintptr_t esp0);
 extern void tss_flush(void);

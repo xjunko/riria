@@ -202,10 +202,11 @@ void paging_load_directory(page_directory_t* dir) {
 }
 
 static void paging_enable(void) {
-  uint32_t cr0;
-  asm volatile("mov %%cr0, %0" : "=r"(cr0));
-  cr0 |= 0x80000000;  // set the paging bit
-  asm volatile("mov %0, %%cr0" ::"r"(cr0));
+  // FIXME: 64bit conversion
+  // uint32_t cr0;
+  // asm volatile("mov %%cr0, %0" : "=r"(cr0));
+  // cr0 |= 0x80000000;  // set the paging bit
+  // asm volatile("mov %0, %%cr0" ::"r"(cr0));
 }
 
 void paging_finalize(void) {
@@ -235,22 +236,24 @@ void paging_finalize(void) {
 }
 
 void paging_fault(regs_t* r) {
+  // FIXME: 64bit conversion
   printk("[mem] page fault at eip=0x%x ", r->eip);
-  uint32_t err_addr;
-  asm volatile("mov %%cr2, %0" : "=r"(err_addr));
-  printk("address=0x%x \n", err_addr);
+  // uint32_t err_addr;
+  // asm volatile("mov %%cr2, %0" : "=r"(err_addr));
+  // printk("address=0x%x \n", err_addr);
 
-  // TODO: optimally we should handler some edge case here.
+  // // TODO: optimally we should handler some edge case here.
 
-  int present = !(r->err_code & 0x1) ? 1 : 0;
-  int rw = (r->err_code & 0x2) ? 1 : 0;
-  int user = (r->err_code & 0x4) ? 1 : 0;
-  int reserved = (r->err_code & 0x8) ? 1 : 0;
-  int id = (r->err_code & 0x10) ? 1 : 0;
+  // int present = !(r->err_code & 0x1) ? 1 : 0;
+  // int rw = (r->err_code & 0x2) ? 1 : 0;
+  // int user = (r->err_code & 0x4) ? 1 : 0;
+  // int reserved = (r->err_code & 0x8) ? 1 : 0;
+  // int id = (r->err_code & 0x10) ? 1 : 0;
 
-  printk("[kernel] segmentation fault\n");
-  printk("    present=%d rw=%d user=%d reserved=%d id=%d\n", present, rw, user,
-         reserved, id);
+  // printk("[kernel] segmentation fault\n");
+  // printk("    present=%d rw=%d user=%d reserved=%d id=%d\n", present, rw,
+  // user,
+  //        reserved, id);
 
   while (1) asm volatile("hlt");
 }

@@ -1,5 +1,5 @@
-ARCH      ?= i386
-OS        ?= elf
+ARCH      = x86_64
+OS        = elf
 TOOLCHAIN ?= ~/Projects/Tooling/Cross/$(ARCH)/gcc-$(ARCH)-$(OS)/bin
 
 CC    = $(TOOLCHAIN)/$(ARCH)-$(OS)-gcc

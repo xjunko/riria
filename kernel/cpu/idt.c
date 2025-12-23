@@ -28,5 +28,5 @@ void idt_install(void) {
 
   printk("[cpu] IDT=0x%x\n", idtp->base);
 
-  idt_flush((uintptr_t)idtp);
+  // idt_flush((uintptr_t)idtp);
 }

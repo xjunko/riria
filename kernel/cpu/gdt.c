@@ -46,8 +46,8 @@ void gdt_install(void) {
   printk("[cpu] GDT=0x%x\n", gdtp->base);
   printk("[cpu] TSS=0x%x\n", (uintptr_t)&gdt.tss);
 
-  gdt_flush((uintptr_t)gdtp);
-  tss_flush();
+  // gdt_flush((uintptr_t)gdtp);
+  // tss_flush();
 }
 
 static void write_tss(uint32_t num, uint16_t ss0, uint32_t esp0) {

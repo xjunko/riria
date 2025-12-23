@@ -29,17 +29,17 @@ static void _mb2_parse_framebuffer(void* tag) {
 }
 
 void framebuffer_install(uint32_t mb_info) {
-  mb2_parse(mb_info, MULTIBOOT_TAG_TYPE_FRAMEBUFFER, _mb2_parse_framebuffer);
+  // mb2_parse(mb_info, MULTIBOOT_TAG_TYPE_FRAMEBUFFER, _mb2_parse_framebuffer);
 
-  // clear framebuffer with colors
-  if (fb_info.addr && fb_info.bpp == 32) {
-    uint32_t* pix = (uint32_t*)fb_info.addr;
-    for (uint32_t y = 0; y < fb_info.height; y++) {
-      for (uint32_t x = 0; x < fb_info.width; x++) {
-        // color based on position
-        pix[y * (fb_info.pitch / 4) + x] =
-            0xFFFF0000 | ((x & 0xFF) << 16) | ((y & 0xFF) << 8);
-      }
-    }
-  }
+  // // clear framebuffer with colors
+  // if (fb_info.addr && fb_info.bpp == 32) {
+  //   uint32_t* pix = (uint32_t*)fb_info.addr;
+  //   for (uint32_t y = 0; y < fb_info.height; y++) {
+  //     for (uint32_t x = 0; x < fb_info.width; x++) {
+  //       // color based on position
+  //       pix[y * (fb_info.pitch / 4) + x] =
+  //           0xFFFF0000 | ((x & 0xFF) << 16) | ((y & 0xFF) << 8);
+  //     }
+  //   }
+  // }
 }

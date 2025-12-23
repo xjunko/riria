@@ -7,9 +7,9 @@
 
 // impl
 #define SYSCALL_WRITE 4
-int syscall_write(regs_t *r) {
+int syscall_write(regs_t* r) {
   int fd = r->ebx;
-  char *buf = (char *)r->ecx;
+  char* buf = (char*)r->ecx;
   size_t len = r->edx;
 
   if (fd == 1) {
@@ -23,7 +23,7 @@ int syscall_write(regs_t *r) {
   return -1;
 }
 
-void syscall_handler(regs_t *r) {
+void syscall_handler(regs_t* r) {
   switch (r->eax) {
     case SYSCALL_WRITE:
       r->eax = syscall_write(r);

@@ -28,22 +28,23 @@ static volatile int sync_depth = 0;
 
 // https://github.com/klange/toaru-nih/blob/master/kernel/cpu/irq.c#L46
 void int_disable(void) {
-  uint32_t flags;
-  asm volatile(
-      "pushf\n\t"
-      "pop %%eax\n\t"
-      "movl %%eax, %0\n\t"
-      : "=r"(flags)
-      :
-      : "%eax");
+  // FIXME: 64bit conversion
+  // uint32_t flags;
+  // asm volatile(
+  //     "pushf\n\t"
+  //     "pop %%eax\n\t"
+  //     "movl %%eax, %0\n\t"
+  //     : "=r"(flags)
+  //     :
+  //     : "%eax");
 
-  INTERRUPT_STOP();
+  // INTERRUPT_STOP();
 
-  if (flags & (1 << 9)) {
-    sync_depth = 1;
-  } else {
-    sync_depth++;
-  }
+  // if (flags & (1 << 9)) {
+  //   sync_depth = 1;
+  // } else {
+  //   sync_depth++;
+  // }
 }
 
 // https://github.com/klange/toaru-nih/blob/master/kernel/cpu/irq.c#L68
@@ -67,16 +68,16 @@ void int_enable(void) {
 
 static void (*irqs[IRQ_CHAIN_SIZE])(void);
 static irq_handler_chain_t irq_routines[IRQ_CHAIN_SIZE * IRQ_CHAIN_DEPTH] = {0};
-static const char *_irq_description[IRQ_CHAIN_SIZE * IRQ_CHAIN_DEPTH] = {0};
+static const char* _irq_description[IRQ_CHAIN_SIZE * IRQ_CHAIN_DEPTH] = {0};
 
-const char *irq_get_handler(int irq, int chain) {
+const char* irq_get_handler(int irq, int chain) {
   if (irq >= IRQ_CHAIN_SIZE) return 0;
   if (chain >= IRQ_CHAIN_DEPTH) return 0;
   return _irq_description[IRQ_CHAIN_SIZE * chain + irq];
 }
 
 void irq_install_handler(int irq, irq_handler_chain_t handler,
-                         const char *description) {
+                         const char* description) {
   printk("[irq] installing '%s' for irq %d \n", description, irq);
   INTERRUPT_STOP();
   for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
@@ -124,24 +125,25 @@ static void irq_setup_gates(void) {
 }
 
 void irq_install(void) {
-  IRQ_SET(0);
-  IRQ_SET(1);
-  IRQ_SET(2);
-  IRQ_SET(3);
-  IRQ_SET(4);
-  IRQ_SET(5);
-  IRQ_SET(6);
-  IRQ_SET(7);
-  IRQ_SET(8);
-  IRQ_SET(9);
-  IRQ_SET(10);
-  IRQ_SET(11);
-  IRQ_SET(12);
-  IRQ_SET(13);
-  IRQ_SET(14);
-  IRQ_SET(15);
-  irq_remap();
-  irq_setup_gates();
+  // FIXME:
+  // IRQ_SET(0);
+  // IRQ_SET(1);
+  // IRQ_SET(2);
+  // IRQ_SET(3);
+  // IRQ_SET(4);
+  // IRQ_SET(5);
+  // IRQ_SET(6);
+  // IRQ_SET(7);
+  // IRQ_SET(8);
+  // IRQ_SET(9);
+  // IRQ_SET(10);
+  // IRQ_SET(11);
+  // IRQ_SET(12);
+  // IRQ_SET(13);
+  // IRQ_SET(14);
+  // IRQ_SET(15);
+  // irq_remap();
+  // irq_setup_gates();
 }
 
 void irq_ack(int irq_no) {
@@ -151,7 +153,7 @@ void irq_ack(int irq_no) {
   outb(PIC1_COMMAND, PIC_EOI);
 }
 
-void irq_handler(regs_t *r) {
+void irq_handler(regs_t* r) {
   int_disable();
   if (r->int_no <= 47 && r->int_no >= 32) {
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {

@@ -1,4 +1,4 @@
-ARCH      = i386
+ARCH      = x86_64
 OS        = elf
 TOOLCHAIN = ~/Projects/Tooling/Cross/$(ARCH)/gcc-$(ARCH)-$(OS)/bin
 
@@ -7,8 +7,8 @@ AS    = $(TOOLCHAIN)/$(ARCH)-$(OS)-as
 LD    = $(TOOLCHAIN)/$(ARCH)-$(OS)-gcc
 STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 
-EMU       = qemu-system-i386
-EMU_ARGS  = -cpu pentium3 -smp 1 -m 256M -vga virtio 
+EMU       = qemu-system-x86_64
+EMU_ARGS  = -smp 1 -m 256M -vga virtio 
 EMU_ARGS += -serial stdio -no-reboot -no-shutdown
 
 TMP_OBJ = /tmp/riria-obj
@@ -18,10 +18,12 @@ TMP_FINAL = /tmp/riria-final
 BASE = ./base
 
 # compiler setup
-override KERNEL_CFLAGS  = -ffreestanding -O0 -g -static -nostdlib
-override KERNEL_CFLAGS += -Wall -Wextra -Werror -Wwrite-strings \
-						  -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=unused-function
-override KERNEL_CFLAGS += -fno-pic -fno-pie
+override KERNEL_CFLAGS  = -Wall -Wextra -ffreestanding 
+override KERNEL_CFLAGS += -fno-stack-protector -fno-stack-check -fno-lto  \
+                          -fno-PIC -ffunction-sections -m64 -march=x86-64  \
+						  -mabi=sysv -mno-80387 -mno-mmx -mno-sse -mno-sse2 \
+						  -mno-red-zone -mcmodel=kernel
+override KERNEL_LDFLAGS = -nostdlib -static -z max-page-size=0x1000 
 
 # kernel sources
 KERNEL_OBJS  = $(patsubst kernel/%.c,$(TMP_OBJ)/%.o,$(wildcard kernel/*.c))
@@ -57,22 +59,43 @@ lib/libriria.a:
 	$(MAKE) -C lib TMP_OBJ=$(TMP_OBJ)
 
 $(BASE)/boot/kernel.bin: kernel/link.ld $(OBJS) lib/libriria.a
-	$(CC) -T $< $(KERNEL_CFLAGS) -static -o $@ ${OBJS} -lgcc ./lib/libriria.a
+	$(LD) $(KERNEL_LDFLAGS) -T kernel/link.ld $(OBJS) lib/libriria.a -o $@
 
-$(TMP_FINAL)/image.iso: $(TMP_OBJ) $(BASE)/boot/kernel.bin 
+# limine stuff
+$(BASE)/boot/limine/repo/limine-bios.sys:
+	mkdir -p $(dir $@)
+	git clone https://codeberg.org/Limine/Limine.git --branch=v10.x-binary --depth=1 $(dir $@)
+	make -C $(dir $@)
+
+# building the final image
+$(TMP_FINAL)/image.iso: $(TMP_OBJ) $(BASE)/boot/kernel.bin $(BASE)/boot/limine/repo/limine-bios.sys
 	mkdir -p $(TMP_ISO)/
 	mkdir -p $(TMP_ISO)/boot/
-	mkdir -p $(TMP_ISO)/boot/grub/
-
+	mkdir -p $(TMP_ISO)/boot/limine/
+	mkdir -p $(TMP_ISO)/EFI/BOOT
+	
 	# copy kernel
 	cp $(BASE)/boot/kernel.bin $(TMP_ISO)/boot/
 
-	# copy grub cfg
-	cp $(BASE)/boot/grub/grub.cfg $(TMP_ISO)/boot/grub/
+	# copy limine cfg
+	cp $(BASE)/boot/limine/limine.conf $(TMP_ISO)/boot/limine/
+
+	# other limine stuff
+	cp $(BASE)/boot/limine/repo/limine-bios.sys $(BASE)/boot/limine/repo/limine-bios-cd.bin \
+	   $(BASE)/boot/limine/repo/limine-uefi-cd.bin \
+	   $(TMP_ISO)/boot/limine/
+
+	# efi boot tree
+	cp $(BASE)/boot/limine/repo/BOOTX64.EFI $(BASE)/boot/limine/repo/BOOTIA32.EFI \
+	   $(TMP_ISO)/EFI/BOOT/
 
 	# generate final iso
 	mkdir -p $(TMP_FINAL)
-	grub-mkrescue -o $@ $(TMP_ISO)
+	xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin \
+        -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus \
+        -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin \
+        -efi-boot-part --efi-boot-image --protective-msdos-label \
+        $(TMP_ISO) -o $(TMP_FINAL)/image.iso
 
 	# clean
 	rm -rf $(TMP_ISO)
