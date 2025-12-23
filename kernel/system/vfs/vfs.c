@@ -1,0 +1,115 @@
+#include <riria/fs/devfs.h>
+#include <riria/fs/vfs.h>
+#include <riria/libc.h>
+#include <riria/types.h>
+
+static vfs_t mountpoints[VFS_MAX_MOUNTPOINTS];
+static vfs_file_t* open_files[VFS_MAX_FILE_DESCRIPTORS];
+
+static bool _startswith(const char* str, const char* prefix) {
+  size_t prefix_len = strlen(prefix);
+  return strncmp(str, prefix, prefix_len) == 0;
+}
+
+static vfs_t* _vfs_find_mnt(const char* path) {
+  if (!path) return NULL;
+  for (int i = 0; i < VFS_MAX_MOUNTPOINTS; i++) {
+    if (mountpoints[i].mnt) {
+      if (_startswith(path, mountpoints[i].mnt)) {
+        return &mountpoints[i];
+      }
+    }
+  }
+  return NULL;
+}
+
+static int _vfs_get_fd(vfs_file_t* file) {
+  if (!file) return -1;
+
+  for (int i = VFS_FD_OFFSET; i < VFS_MAX_FILE_DESCRIPTORS; i++) {
+    if (!open_files[i]) {
+      open_files[i] = file;
+      file->id = i;
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+vfs_file_t* vfs_open(const char* path, int flags, int mode) {
+  if (!path) return NULL;
+
+  vfs_t* mnt = _vfs_find_mnt(path);
+  if (!mnt) return NULL;
+  if (!mnt->impl) return NULL;
+  if (!mnt->impl->exists) return NULL;
+
+  const char* loc_wo_mnt = path + strlen(mnt->mnt) - 1;
+  vfs_file_t* file = malloc(sizeof(vfs_file_t));
+  if (!file) return NULL;
+  if (mnt->impl->exists(loc_wo_mnt) == 0) {
+    free(file);
+    return NULL;
+  }
+
+  file->id = _vfs_get_fd(file);
+  file->loc = path;
+  file->flags = flags;
+  file->mode = mode;
+  file->fs = mnt;
+
+  return file;
+}
+
+int vfs_read(vfs_file_t* file, const void* buffer, size_t sz) {
+  if (!file) return -1;
+  if (!file->loc) return -2;
+  if (!file->fs) return -3;
+  if (!file->fs->impl) return -4;
+  if (!file->fs->impl->read) return 0;
+
+  const char* loc_wo_mnt = file->loc + strlen(file->fs->mnt) - 1;
+  return file->fs->impl->read(loc_wo_mnt, buffer, sz);
+}
+
+int vfs_write(vfs_file_t* file, const void* buffer, size_t sz) {
+  if (!file) return -1;
+  if (!file->loc) return -2;
+  if (!file->fs) return -3;
+  if (!file->fs->impl) return -4;
+  if (!file->fs->impl->write) return 0;
+
+  const char* loc_wo_mnt = file->loc + strlen(file->fs->mnt) - 1;
+  return file->fs->impl->write(loc_wo_mnt, buffer, sz);
+}
+
+int vfs_exists(vfs_file_t* file) {
+  if (!file) return -1;
+  if (!file->loc) return -2;
+  if (!file->fs) return -3;
+
+  return file->fs->impl->exists(file->loc) ? 1 : 0;
+}
+
+int vfs_close(vfs_file_t* file) {
+  if (!file) return -1;
+  if (file->id < 0 || file->id >= VFS_MAX_FILE_DESCRIPTORS ||
+      !open_files[file->id]) {
+    return -2;
+  }
+
+  open_files[file->id] = NULL;
+  free(file);
+  return 0;
+}
+
+void vfs_install(void) {
+  kprintf("[vfs] VFS INIT... ");
+  vfs_impl_t* devfs = malloc(sizeof(vfs_file_t));
+  mountpoints[0].mnt = "/dev/";
+  mountpoints[0].impl = devfs;
+  devfs_init(devfs);
+
+  kprintf("ALL OK!\n");
+}
