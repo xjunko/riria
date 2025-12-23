@@ -2,6 +2,9 @@
 
 currently the kernel boots up and prints some stuff, not that interesting.
 
+<img width="1041" height="836" alt="image" src="https://github.com/user-attachments/assets/3248f3d7-e82a-4026-9376-e4046df91c97" />
+
+
 ### what this is
 this is a very poor attempt at making an operating system, you should take everything that i did here as a what not to do.
 
