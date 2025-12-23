@@ -23,6 +23,10 @@ void kmain(void) {
 
   // memory
   pmm_install();
+  for (int i = 0; i < 5; i++) {
+    void* page = pmm_allocate();
+    kprintf("[pmm] allocated page at phys addr: %p\n", page);
+  }
 
   // basic drivers
   ps2_keyboard_install();

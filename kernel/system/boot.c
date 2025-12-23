@@ -14,5 +14,17 @@ void boot_verify(void) {
     panic("unsupported limine base revision!");
   }
 
+  if (memmap_request.response == NULL) {
+    panic("no memory map response!");
+  }
+
+  if (hhdm_request.response == NULL) {
+    panic("no HHDM response!");
+  }
+
+  if (executable_address_request.response == NULL) {
+    panic("no executable address response!");
+  }
+
   kprintf("[sys] bootloader verified.\n");
 }

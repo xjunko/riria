@@ -44,26 +44,6 @@
 
 extern uint8_t kern_start[], kern_end[];
 
-// clang-format off
-__attribute__((used, section(".limine_requests")))
-volatile struct limine_memmap_request memmap_request = {
-    .id = LIMINE_MEMMAP_REQUEST_ID,
-    .revision = 0,
-};
-
-__attribute__((used, section(".limine_requests")))
-volatile struct limine_executable_address_request executable_address_request = {
-    .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST_ID,
-    .revision = 0,
-};
-
-__attribute__((used, section(".limine_requests")))
-volatile struct limine_hhdm_request hhdm_request = {
-    .id = LIMINE_HHDM_REQUEST_ID,
-    .revision = 0,
-};
-// clang-format on
-
 #define PMM_BITMAP_SIZE (1024 * 1024)
 static uint8_t bitmap[PMM_BITMAP_SIZE];
 
@@ -80,10 +60,6 @@ static size_t total_ram_pages = 0;
 
 void pmm_install(void) {
   kprintf("[pmm] installing physical memory manager...\n");
-
-  if (memmap_request.response == NULL) {
-    panic("no memory map response!");
-  }
 
   size_t entry_count = memmap_request.response->entry_count;
   struct limine_memmap_entry** entries = memmap_request.response->entries;

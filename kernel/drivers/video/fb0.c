@@ -6,14 +6,6 @@
 #include "flanterm/flanterm.h"
 #include "flanterm/flanterm_backends/fb.h"
 
-// clang-format off
-__attribute__((used, section(".limine_requests")))
-static volatile struct limine_framebuffer_request framebuffer_request = {
-    .id = LIMINE_FRAMEBUFFER_REQUEST_ID,
-    .revision = 0
-};
-// clang-format on
-
 static struct {
   void* addr;
   void* buffer;

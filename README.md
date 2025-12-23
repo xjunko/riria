@@ -13,9 +13,10 @@ this is a very poor attempt at making an operating system, you should take every
     - tss is hacky, but its fine for now.
 - syscall 
     - currently only write(4) which writes to stdout to get the ball rolling
+- pmm
+    - useless without vmm + paging
 
 ### things that doesnt work:
-- pmm
 - vmm + paging
 - malloc and family
 - elf exec
