@@ -1,9 +1,11 @@
 #include <riria/libc.h>
 
-void* memset(void* dest, int c, size_t n) {
-  asm volatile("cld; rep stosb"
-               : "=c"((int){0})
-               : "D"(dest), "a"(c), "c"(n)
-               : "flags", "memory");
-  return dest;
+void* memset(void* s, int c, size_t n) {
+  uint8_t* p = (uint8_t*)s;
+
+  for (size_t i = 0; i < n; i++) {
+    p[i] = (uint8_t)c;
+  }
+
+  return s;
 }
