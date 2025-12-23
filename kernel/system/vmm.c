@@ -134,9 +134,9 @@ bool vmm_map_page(pagemap_t* pagemap, uintptr_t virt, uintptr_t phys,
 
   uint64_t* pml4 = pagemap->base_virt;
   if (!pml4) goto fail;
-  uintptr_t* pdpt = vmm_get_next_level(pml4, pml4_idx, true, alloc_flags);
+  uint64_t* pdpt = vmm_get_next_level(pml4, pml4_idx, true, alloc_flags);
   if (!pdpt) goto fail;
-  uintptr_t* pd = vmm_get_next_level(pdpt, pdpt_idx, true, alloc_flags);
+  uint64_t* pd = vmm_get_next_level(pdpt, pdpt_idx, true, alloc_flags);
   if (!pd) goto fail;
   uint64_t* pt = vmm_get_next_level(pd, pd_idx, true, alloc_flags);
   if (!pt) goto fail;

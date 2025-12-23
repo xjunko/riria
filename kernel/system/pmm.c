@@ -93,7 +93,7 @@ void pmm_install(void) {
       size_t last_page = top / PAGE_SIZE;
 
       for (size_t page_idx = first_page; page_idx < last_page; ++page_idx) {
-        if (page_idx <= highest_address) {
+        if (page_idx <= highest_page) {
           if (BITMAP_GET(page_idx)) {
             BITMAP_CLEAR(page_idx);
             total_ram_pages++;
