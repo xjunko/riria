@@ -47,15 +47,15 @@ void gdt_install(void) {
   gdt_set_gate(4, 0, 0, 0xFA, 0x0);   // 0x20 - user data segment
   write_tss(5, 0x10, 0x0);            // 0x28 - TSS segment (1)
 
-  printk("[cpu] GDT=0x%x\n", gdtp->base);
-  printk("[cpu] TSS=0x%x\n", (uintptr_t)&gdt.tss);
-  printk("[cpu] GDT INIT...");
+  kprintf("[cpu] GDT=0x%x\n", gdtp->base);
+  kprintf("[cpu] TSS=0x%x\n", (uintptr_t)&gdt.tss);
+  kprintf("[cpu] GDT INIT...");
 
   gdt_flush((uintptr_t)gdtp);
   tss_flush();
 
-  printk(" OK!\n");  // it's not a proper osdev project if it doesnt have GDT
-                     // INIT... OK /j
+  kprintf(" OK!\n");  // it's not a proper osdev project if it doesnt have GDT
+                      // INIT... OK /j
 }
 
 static void write_tss(uint32_t num, uint16_t ss0, uint32_t esp0) {
@@ -78,5 +78,5 @@ static void write_tss(uint32_t num, uint16_t ss0, uint32_t esp0) {
 
 void tss_set_stack(uintptr_t stack) {
   gdt.tss.rsp0 = stack;
-  printk("[cpu] TSS.ESP0=0x%x\n", stack);
+  kprintf("[cpu] TSS.ESP0=0x%x\n", stack);
 }

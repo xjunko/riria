@@ -12,4 +12,4 @@ static struct {
   uint32_t pitch;
 } fb_info __attribute__((used));
 
-void framebuffer_install(void) { printk("[ fb] stub"); }
+void framebuffer_install(void) { kprintf("[ fb] stub"); }

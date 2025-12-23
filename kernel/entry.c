@@ -26,7 +26,7 @@ void kmain(void) {
                : "a"(4), "b"(1), "c"("Hello, Riria!\n"),
                  "d"(15));  // syscall write(4) to serial(1)
 
-  printk("[sys] halted.\n");
+  kprintf("[sys] halted.\n");
   while (1) {
   }
 }

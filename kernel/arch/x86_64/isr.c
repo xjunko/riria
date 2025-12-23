@@ -14,7 +14,7 @@ static struct {
 static isr_callback isr_callbacks[256] = {0};
 
 void isr_install_handler(size_t isr, isr_callback callback) {
-  printk("[isr] installing handler for ISR %d\n", isr);
+  kprintf("[isr] installing handler for ISR %d\n", isr);
   isr_callbacks[isr] = callback;
 }
 
@@ -69,12 +69,12 @@ void isr_install(void) {
 }
 
 void isr_handler(regs_t* r) {
-  printk("[isr] interrupt received: 0x%x (%d)\n", r->int_no, r->int_no);
+  kprintf("[isr] interrupt received: 0x%x (%d)\n", r->int_no, r->int_no);
 
   isr_callback handler = isr_callbacks[r->int_no];
   if (handler) {
     handler(r);
   } else {
-    printk("[isr] unhandled interrupt: %d\n", r->int_no);
+    kprintf("[isr] unhandled interrupt: %d\n", r->int_no);
   }
 }

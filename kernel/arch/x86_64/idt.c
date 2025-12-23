@@ -29,8 +29,8 @@ void idt_install(void) {
   idtp->base = (uintptr_t)&ENTRY(0);
   memset(&ENTRY(0), 0, sizeof(idt.entries));
 
-  printk("[cpu] IDT=0x%x\n", idtp->base);
-  printk("[cpu] IDT INIT...");
+  kprintf("[cpu] IDT=0x%x\n", idtp->base);
+  kprintf("[cpu] IDT INIT...");
   idt_flush((uintptr_t)idtp);
-  printk(" OK!\n");
+  kprintf(" OK!\n");
 }

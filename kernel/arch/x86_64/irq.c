@@ -75,7 +75,7 @@ const char* irq_get_handler(int irq, int chain) {
 
 void irq_install_handler(int irq, irq_handler_chain_t handler,
                          const char* description) {
-  printk("[irq] installing '%s' for irq %d \n", description, irq);
+  kprintf("[irq] installing '%s' for irq %d \n", description, irq);
   INTERRUPT_STOP();
   for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
     if (irq_routines[i * IRQ_CHAIN_SIZE + irq]) {
@@ -114,7 +114,7 @@ static void irq_remap(void) {
   outb_p(PIC1_DATA, 0x01);
   outb_p(PIC2_DATA, 0x01);
 
-  printk("[irq] PIC remapped to 0x%x and 0x%x\n", PIC1_OFFSET, PIC2_OFFSET);
+  kprintf("[irq] PIC remapped to 0x%x and 0x%x\n", PIC1_OFFSET, PIC2_OFFSET);
 }
 
 static void irq_setup_gates(void) {
@@ -126,7 +126,7 @@ static void irq_setup_gates(void) {
 void irq_install(void) {
   irq_remap();
 
-  printk("[irq] IRQ INIT...");
+  kprintf("[irq] IRQ INIT...");
   IRQ_SET(0);
   IRQ_SET(1);
   IRQ_SET(2);
@@ -144,11 +144,11 @@ void irq_install(void) {
   IRQ_SET(14);
   IRQ_SET(15);
   irq_setup_gates();
-  printk(" OK!\n");
+  kprintf(" OK!\n");
 }
 
 void irq_ack(int irq_no) {
-  printk("[irq] ack IRQ=%d\n", irq_no);
+  kprintf("[irq] ack IRQ=%d\n", irq_no);
 
   if (irq_no >= 8) {
     outb(PIC2_COMMAND, PIC_EOI);
@@ -157,19 +157,19 @@ void irq_ack(int irq_no) {
 }
 
 void print_regs(regs_t* r) {
-  printk("[irq] err_code=0x%x int_no=0x%x\n", r->err_code, r->int_no);
-  printk("[irq] rax=0x%x rbx=0x%x rcx=0x%x rdx=0x%x\n", r->rax, r->rbx, r->rcx,
-         r->rdx);
-  printk("[irq] rsi=0x%x rdi=0x%x rbp=0x%x\n", r->rsi, r->rdi, r->rbp);
-  printk("[irq] r8=0x%x r9=0x%x r10=0x%x r11=0x%x\n", r->r8, r->r9, r->r10,
-         r->r11);
-  printk("[irq] r12=0x%x r13=0x%x r14=0x%x r15=0x%x\n", r->r12, r->r13, r->r14,
-         r->r15);
-  printk("[irq] rflags=0x%x\n ", r->rflags);
+  kprintf("[irq] err_code=0x%x int_no=0x%x\n", r->err_code, r->int_no);
+  kprintf("[irq] rax=0x%x rbx=0x%x rcx=0x%x rdx=0x%x\n", r->rax, r->rbx, r->rcx,
+          r->rdx);
+  kprintf("[irq] rsi=0x%x rdi=0x%x rbp=0x%x\n", r->rsi, r->rdi, r->rbp);
+  kprintf("[irq] r8=0x%x r9=0x%x r10=0x%x r11=0x%x\n", r->r8, r->r9, r->r10,
+          r->r11);
+  kprintf("[irq] r12=0x%x r13=0x%x r14=0x%x r15=0x%x\n", r->r12, r->r13, r->r14,
+          r->r15);
+  kprintf("[irq] rflags=0x%x\n ", r->rflags);
 }
 
 void irq_handler(regs_t* r) {
-  printk("[irq] irq_handler called for int_no=0x%x\n", r->int_no);
+  kprintf("[irq] irq_handler called for int_no=0x%x\n", r->int_no);
   int_disable();
   if (r->int_no <= 47 && r->int_no >= 32) {
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
@@ -184,5 +184,5 @@ void irq_handler(regs_t* r) {
   }
 done:
   int_resume();
-  printk("[irq] irq_handler finished for int_no=0x%x\n", r->int_no);
+  kprintf("[irq] irq_handler finished for int_no=0x%x\n", r->int_no);
 }

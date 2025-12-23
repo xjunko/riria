@@ -8,11 +8,11 @@ static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(4);
 // clang-format on
 
 void boot_verify(void) {
-  printk("[sys] verifying bootloader... \n");
+  kprintf("[sys] verifying bootloader... \n");
 
   if (LIMINE_BASE_REVISION_SUPPORTED(limine_base_revision) == false) {
     while (1) asm volatile("hlt");
   }
 
-  printk("[sys] bootloader verified.\n");
+  kprintf("[sys] bootloader verified.\n");
 }
