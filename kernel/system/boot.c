@@ -11,7 +11,7 @@ void boot_verify(void) {
   kprintf("[sys] verifying bootloader... \n");
 
   if (LIMINE_BASE_REVISION_SUPPORTED(limine_base_revision) == false) {
-    while (1) asm volatile("hlt");
+    panic("unsupported limine base revision!");
   }
 
   kprintf("[sys] bootloader verified.\n");

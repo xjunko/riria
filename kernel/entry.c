@@ -8,6 +8,7 @@
 #include <riria/drivers/ps2.h>
 #include <riria/drivers/serial.h>
 #include <riria/libc.h>
+#include <riria/mem.h>
 #include <riria/types.h>
 
 void kmain(void) {
@@ -19,6 +20,9 @@ void kmain(void) {
   idt_install();
   irq_install();
   isr_install();
+
+  // memory
+  pmm_install();
 
   // basic drivers
   ps2_keyboard_install();

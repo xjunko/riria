@@ -21,6 +21,7 @@ SECTIONS {
 
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
+    kern_start = .;
     .text BLOCK(4K) : ALIGN(4K) {
         *(.text .text.*)
     } :text
@@ -41,6 +42,7 @@ SECTIONS {
         *(.bss .bss.*)
         *(COMMON)
     } :data
+    kern_end = .;
 
     end = .;
 

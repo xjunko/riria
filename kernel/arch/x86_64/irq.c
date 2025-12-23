@@ -25,7 +25,6 @@
 
 static volatile int sync_depth = 0;
 
-// https://github.com/klange/toaru-nih/blob/master/kernel/cpu/irq.c#L46
 void int_disable(void) {
   INTERRUPT_STOP();
 
@@ -44,7 +43,6 @@ void int_disable(void) {
   }
 }
 
-// https://github.com/klange/toaru-nih/blob/master/kernel/cpu/irq.c#L68
 void int_resume(void) {
   if (sync_depth == 0 || sync_depth == 1) {
     INTERRUPT_START();
@@ -53,7 +51,6 @@ void int_resume(void) {
   }
 }
 
-// https://github.com/klange/toaru-nih/blob/master/kernel/cpu/irq.c#L77
 void int_enable(void) {
   sync_depth = 0;
   INTERRUPT_START();
@@ -96,7 +93,6 @@ void irq_uninstall_handler(int irq) {
   INTERRUPT_START();
 }
 
-// https://github.com/klange/toaru-nih/blob/master/kernel/cpu/irq.c#L117
 static void irq_remap(void) {
   // init
   outb_p(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);

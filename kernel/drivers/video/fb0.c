@@ -34,8 +34,7 @@ static struct {
 void framebuffer_install(void) {
   if (framebuffer_request.response == NULL ||
       framebuffer_request.response->framebuffer_count < 1) {
-    kprintf("[ fb] no framebuffer found!\n");
-    while (1) asm volatile("hlt");
+    panic("no framebuffer found!");
   }
 
   struct limine_framebuffer* fb = framebuffer_request.response->framebuffers[0];
