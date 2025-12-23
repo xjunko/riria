@@ -39,6 +39,16 @@ void kmain(void) {
                  "d"(15));  // syscall write(4) to serial(1)
 
   kprintf("[sys] halted.\n");
+
+  int i = 0;
   while (1) {
+    i++;
+
+    // i call this, "minecraft"
+    for (int x = (i % 640) + 100; x < (i % 640) + 200; x++) {
+      for (int y = (i % 400) + 100; y < (i % 400) + 200; y++) {
+        framebuffer_draw_pixel(x, y, (i << 16) | (i << 8) | i);
+      }
+    }
   }
 }

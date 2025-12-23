@@ -88,3 +88,11 @@ void framebuffer_write(const char str[]) {
 
   flanterm_write(fb_info.ft_ctx, str, strlen(str));
 }
+
+void framebuffer_draw_pixel(int x, int y, uint32_t col) {
+  if (x < 0 || x >= (int)fb_info.width || y < 0 || y >= (int)fb_info.height) {
+    return;
+  }
+
+  *((uint32_t*)fb_info.addr + y * (fb_info.pitch >> 2) + x) = col;
+}
