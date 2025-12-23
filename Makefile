@@ -8,7 +8,7 @@ LD    = $(TOOLCHAIN)/$(ARCH)-$(OS)-gcc
 STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 
 EMU       = qemu-system-x86_64
-EMU_ARGS  = -smp 1 -m 256M -vga virtio 
+EMU_ARGS  = -smp 1 -m 256M -vga virtio -d int
 EMU_ARGS += -serial stdio -no-reboot -no-shutdown
 
 TMP_OBJ = /tmp/riria-obj

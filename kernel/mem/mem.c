@@ -236,7 +236,7 @@ void paging_finalize(void) {
 
 void paging_fault(regs_t* r) {
   // FIXME: 64bit conversion
-  printk("[mem] page fault at eip=0x%x ", r->eip);
+  // printk("[mem] page fault at rip=0x%x ", r->rip);
   // uint32_t err_addr;
   // asm volatile("mov %%cr2, %0" : "=r"(err_addr));
   // printk("address=0x%x \n", err_addr);

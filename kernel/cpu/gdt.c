@@ -3,8 +3,13 @@
 #include <riria/libk.h>
 #include <riria/types.h>
 
+__attribute__((aligned(16))) uint8_t kernel_stack[16384];
+__attribute__((aligned(16))) uint8_t user_stack[65536];
+__attribute__((aligned(16))) uint8_t df_stack[65536];
+__attribute__((aligned(16))) uint8_t nmi_stack[65536];
+
 static struct {
-  gdt_entry_t entries[6];
+  gdt_entry_t entries[7];
   gdt_ptr_t ptr;
   tss_entry_t tss;
 } gdt __attribute__((used));
@@ -40,15 +45,14 @@ void gdt_install(void) {
   gdt_set_gate(2, 0, 0, 0x92, 0x0);   // 0x10 - data segment
   gdt_set_gate(3, 0, 0, 0xF2, 0x20);  // 0x18 - user code segment
   gdt_set_gate(4, 0, 0, 0xFA, 0x0);   // 0x20 - user data segment
-
-  // write_tss(5, 0x10, 0x0);
+  write_tss(5, 0x10, 0x0);            // 0x28 - TSS segment (1)
 
   printk("[cpu] GDT=0x%x\n", gdtp->base);
-  // printk("[cpu] TSS=0x%x\n", (uintptr_t)&gdt.tss);
+  printk("[cpu] TSS=0x%x\n", (uintptr_t)&gdt.tss);
   printk("[cpu] GDT INIT...");
 
   gdt_flush((uintptr_t)gdtp);
-  // tss_flush();
+  tss_flush();
 
   printk(" OK!\n");  // it's not a proper osdev project if it doesnt have GDT
                      // INIT... OK /j
@@ -57,24 +61,22 @@ void gdt_install(void) {
 static void write_tss(uint32_t num, uint16_t ss0, uint32_t esp0) {
   tss_entry_t* tss = &gdt.tss;
   uintptr_t base = (uintptr_t)tss;
-  uintptr_t limit = base + sizeof(*tss);
+  uintptr_t limit = sizeof(*tss) - 1;
 
-  gdt_set_gate(num, base, limit, 0xE9, 0x00);
+  gdt_set_gate(num, base, limit, 0x89, 0x00);
   memset(tss, 0x0, sizeof(*tss));
 
-  tss->ss0 = ss0;
-  tss->esp0 = esp0;
-  tss->cs = 0x0b;
-  tss->ss = 0x13;
-  tss->ds = 0x13;
-  tss->es = 0x13;
-  tss->fs = 0x13;
-  tss->gs = 0x13;
+  tss->ist1 = (uint64_t)(df_stack + sizeof(df_stack));
+  tss->ist2 = (uint64_t)(nmi_stack + sizeof(nmi_stack));
+  tss->rsp0 = (uint64_t)(kernel_stack + sizeof(kernel_stack));
 
-  tss->iomap_base = sizeof *tss;
+  // HACK: bit cursed but it does the job for now
+  uint32_t* hi = (uint32_t*)&gdt.entries[num + 1];
+  hi[0] = (base >> 32);
+  hi[1] = 0;
 }
 
 void tss_set_stack(uintptr_t stack) {
-  gdt.tss.esp0 = stack;
+  gdt.tss.rsp0 = stack;
   printk("[cpu] TSS.ESP0=0x%x\n", stack);
 }
