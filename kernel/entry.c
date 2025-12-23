@@ -7,6 +7,7 @@
 #include <riria/drivers/framebuffer.h>
 #include <riria/drivers/ps2.h>
 #include <riria/drivers/serial.h>
+#include <riria/fs/vfs.h>
 #include <riria/libc.h>
 #include <riria/mem.h>
 #include <riria/types.h>
@@ -26,10 +27,28 @@ void kmain(void) {
   vmm_install();
   heap_install();
 
+  // vfs
+  vfs_install();
+
   // basic drivers
   ps2_keyboard_install();
   framebuffer_install();
 
+  // test vfs
+  vfs_file_t* serial_fs = vfs_open("/dev/stdout", 0, 0);
+  if (!serial_fs) panic("failed to get /dev/stdout");
+  int ret = vfs_write(serial_fs, "hello, from vfs!\n", 18);
+  if (ret < 0) {
+    kprintf("ret_code: %d\n", ret);
+    panic("failed to write to /dev/stdout");
+  }
+  ret = vfs_close(serial_fs);
+  if (ret < 0) {
+    kprintf("ret_code: %d\n", ret);
+    panic("failed to close /dev/stdout");
+  }
+
+  // test syscall
   asm volatile("int $33");  // ack 1
   asm volatile("int $0x80"
                :
