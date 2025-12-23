@@ -50,7 +50,7 @@ void kmain(void) {
     panic("failed to close /dev/stdout");
   }
 
-  // /dev/zero - this one causes page fault
+  // /dev/zero
   void* buffer = malloc(16);
   memset(buffer, 0x69, 16);
   vfs_file_t* zero_fs = vfs_open("/dev/zero", 0, 0);
