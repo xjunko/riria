@@ -35,6 +35,8 @@ void kmain(void) {
   framebuffer_install();
 
   // test vfs
+
+  // /dev/stdout
   vfs_file_t* serial_fs = vfs_open("/dev/stdout", 0, 0);
   if (!serial_fs) panic("failed to get /dev/stdout");
   int ret = vfs_write(serial_fs, "hello, from vfs!\n", 18);
@@ -46,6 +48,29 @@ void kmain(void) {
   if (ret < 0) {
     kprintf("ret_code: %d\n", ret);
     panic("failed to close /dev/stdout");
+  }
+
+  // /dev/zero - this one causes page fault
+  void* buffer = malloc(16);
+  memset(buffer, 0x69, 16);
+  vfs_file_t* zero_fs = vfs_open("/dev/zero", 0, 0);
+  if (!zero_fs) panic("failed to get /dev/zero");
+  ret = vfs_read(zero_fs, buffer, 16);
+  if (ret < 0) {
+    kprintf("ret_code: %d\n", ret);
+    panic("failed to read from /dev/zero");
+  }
+  ret = vfs_close(zero_fs);
+  if (ret < 0) {
+    kprintf("ret_code: %d\n", ret);
+    panic("failed to close /dev/zero");
+  }
+
+  // check if the buffer is zeroed
+  for (int i = 0; i < 16; i++) {
+    if (((uint8_t*)buffer)[i] != 0) {
+      panic("dev/zero read failed");
+    }
   }
 
   // test syscall
