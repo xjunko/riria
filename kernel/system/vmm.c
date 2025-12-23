@@ -38,6 +38,8 @@
  */
 
 #include <riria/boot.h>
+#include <riria/cpu/isr.h>
+#include <riria/cpu/regs.h>
 #include <riria/libc.h>
 #include <riria/mem.h>
 #include <riria/types.h>
@@ -304,4 +306,12 @@ void vmm_install(void) {
 
   vmm_switch_pagemap(kernel_pagemap);
   kprintf(" OK!\n");
+
+  // page fault handler
+  isr_install_handler(14, vmm_pagefault);
+}
+
+void vmm_pagefault(regs_t* r) {
+  // todo: handle ts
+  panic("erm, page fault occurred");
 }
