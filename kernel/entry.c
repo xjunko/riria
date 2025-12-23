@@ -20,6 +20,9 @@ void kmain(void) {
   irq_install();
   isr_install();
 
+  // basic drivers
+  framebuffer_install();
+
   asm volatile("int $33");  // ack 1
   asm volatile("int $0x80"
                :

@@ -29,6 +29,8 @@ override KERNEL_LDFLAGS = -nostdlib -static -z max-page-size=0x1000
 KERNEL_OBJS  = $(patsubst kernel/%.c,$(TMP_OBJ)/%.o,$(wildcard kernel/*.c))
 KERNEL_OBJS += $(patsubst kernel/%.c,$(TMP_OBJ)/%.o,$(wildcard kernel/*/*.c))
 KERNEL_OBJS += $(patsubst kernel/%.c,$(TMP_OBJ)/%.o,$(wildcard kernel/*/*/*.c))
+KERNEL_OBJS += $(patsubst kernel/%.c,$(TMP_OBJ)/%.o,$(wildcard kernel/*/*/*/*.c))
+KERNEL_OBJS += $(patsubst kernel/%.c,$(TMP_OBJ)/%.o,$(wildcard kernel/*/*/*/*/*.c))
 
 # assembly sources
 # stairway to assembly heaven

@@ -1,3 +1,4 @@
+#include <riria/drivers/framebuffer.h>
 #include <riria/drivers/serial.h>
 #include <riria/libc.h>
 
@@ -22,6 +23,7 @@ int printf(const char* fmt, ...) {
   va_end(args);
 
   for (int i = 0; buf[i]; i++) serial_write(buf[i]);
+  framebuffer_write(buf);
 
   return 0;
 }
