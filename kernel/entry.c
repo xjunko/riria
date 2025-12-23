@@ -21,6 +21,7 @@ void kmain(void) {
   isr_install();
 
   // basic drivers
+  ps2_keyboard_install();
   framebuffer_install();
 
   asm volatile("int $33");  // ack 1

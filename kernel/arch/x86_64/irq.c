@@ -148,8 +148,6 @@ void irq_install(void) {
 }
 
 void irq_ack(int irq_no) {
-  kprintf("[irq] ack IRQ=%d\n", irq_no);
-
   if (irq_no >= 8) {
     outb(PIC2_COMMAND, PIC_EOI);
   }
@@ -169,7 +167,6 @@ void print_regs(regs_t* r) {
 }
 
 void irq_handler(regs_t* r) {
-  kprintf("[irq] irq_handler called for int_no=0x%x\n", r->int_no);
   int_disable();
   if (r->int_no <= 47 && r->int_no >= 32) {
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
@@ -184,5 +181,4 @@ void irq_handler(regs_t* r) {
   }
 done:
   int_resume();
-  kprintf("[irq] irq_handler finished for int_no=0x%x\n", r->int_no);
 }
