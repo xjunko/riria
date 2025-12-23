@@ -1,6 +1,6 @@
 #include <riria/cpu/idt.h>
 #include <riria/cpu/isr.h>
-#include <riria/libk.h>
+#include <riria/libc.h>
 
 static struct {
   idt_entry_t entries[256];

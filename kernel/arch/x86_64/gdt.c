@@ -1,6 +1,6 @@
 #include <riria/cpu/gdt.h>
 #include <riria/cpu/tss.h>
-#include <riria/libk.h>
+#include <riria/libc.h>
 #include <riria/types.h>
 
 __attribute__((aligned(16))) uint8_t kernel_stack[16384];

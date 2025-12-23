@@ -1,5 +1,5 @@
 #include <riria/cpu/io.h>
-#include <riria/serial.h>
+#include <riria/drivers/serial.h>
 
 #define COM1 0x3F8
 

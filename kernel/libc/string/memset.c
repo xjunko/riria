@@ -1,4 +1,4 @@
-#include <riria/libk.h>
+#include <riria/libc.h>
 
 void* memset(void* dest, int c, size_t n) {
   asm volatile("cld; rep stosb"

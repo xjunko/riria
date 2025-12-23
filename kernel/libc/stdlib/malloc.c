@@ -1,4 +1,4 @@
-#include <riria/libk.h>
+#include <riria/libc.h>
 
 void* malloc(size_t size) {
   printk("[lib] malloc used, not implemented!\n");

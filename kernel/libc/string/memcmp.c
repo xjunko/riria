@@ -1,4 +1,4 @@
-#include <riria/libk.h>
+#include <riria/libc.h>
 
 int memcmp(const void* s1, const void* s2, size_t n) {
   const uint8_t* p1 = (const uint8_t*)s1;

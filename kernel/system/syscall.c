@@ -1,7 +1,7 @@
 #include <riria/cpu/isr.h>
 #include <riria/cpu/regs.h>
-#include <riria/libk.h>
-#include <riria/serial.h>
+#include <riria/drivers/serial.h>
+#include <riria/libc.h>
 #include <riria/types.h>
 
 // impl

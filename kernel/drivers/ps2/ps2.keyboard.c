@@ -1,7 +1,7 @@
 #include <riria/cpu/io.h>
 #include <riria/cpu/irq.h>
-#include <riria/libk.h>
-#include <riria/ps2.h>
+#include <riria/drivers/ps2.h>
+#include <riria/libc.h>
 
 #define KB_IRQ 0x1
 #define KB_DEVICE 0x60
@@ -12,7 +12,7 @@ static void keyboard_wait(void) {
     ;
 }
 
-static int keyboard_handler(struct regs *r) {
+static int keyboard_handler(struct regs* r) {
   printk("[ps2] keyboard handler called \n");
 
   unsigned char scancode;

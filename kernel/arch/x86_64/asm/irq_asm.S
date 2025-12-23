@@ -4,7 +4,8 @@
 .macro IRQ ident byte
     .global _irq\ident
     _irq\ident:
-        push $0x0
+        cli
+        push $0x00
         push $\byte
         jmp irq_common
 .endm
@@ -50,7 +51,7 @@ irq_common:
     pushfq
 
     # c handler
-    lea 128(%rsp), %rdi
+    mov %rsp, %rdi
     call irq_handler
 
     # restore registers

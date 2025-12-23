@@ -1,4 +1,4 @@
-#include <riria/libk.h>
+#include <riria/libc.h>
 
 void* memcpy(void* restrict dest, const void* restrict src, size_t n) {
   asm volatile("cld; rep movsb"

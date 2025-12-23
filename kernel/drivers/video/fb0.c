@@ -1,7 +1,6 @@
 #include <riria/boot.h>
-#include <riria/framebuffer.h>
-#include <riria/libk.h>
-#include <riria/mem.h>
+#include <riria/drivers/framebuffer.h>
+#include <riria/libc.h>
 #include <riria/types.h>
 
 static struct {
@@ -13,4 +12,4 @@ static struct {
   uint32_t pitch;
 } fb_info __attribute__((used));
 
-void framebuffer_install(uint32_t mb_info) { printk("[ fb] stub"); }
+void framebuffer_install(void) { printk("[ fb] stub"); }

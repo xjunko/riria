@@ -1,7 +1,5 @@
-#include <riria/libk.h>
-#include <riria/serial.h>
-#include <stdarg.h>
-#include <stdint.h>
+#include <riria/drivers/serial.h>
+#include <riria/libc.h>
 
 #define MAX_PRINTK 512
 

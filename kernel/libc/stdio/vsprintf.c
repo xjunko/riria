@@ -1,4 +1,4 @@
-#include <riria/libk.h>
+#include <riria/libc.h>
 #include <stdarg.h>
 #include <stdint.h>
 

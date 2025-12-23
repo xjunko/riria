@@ -1,7 +1,7 @@
 #include <riria/cpu/idt.h>
 #include <riria/cpu/io.h>
 #include <riria/cpu/irq.h>
-#include <riria/libk.h>
+#include <riria/libc.h>
 #include <riria/types.h>
 
 #define PIC1 0x20
@@ -156,22 +156,20 @@ void irq_ack(int irq_no) {
   outb(PIC1_COMMAND, PIC_EOI);
 }
 
-// static void print_regs(regs_t* r) {
-//   printk("[irq] err_code=%d int_no=%d\n", r->err_code, r->int_no);
-//   printk("[irq] rax=0x%x rbx=0x%x rcx=0x%x rdx=0x%x\n", r->rax, r->rbx,
-//   r->rcx,
-//          r->rdx);
-//   printk("[irq] rsi=0x%x rdi=0x%x rbp=0x%x\n", r->rsi, r->rdi, r->rbp);
-//   printk("[irq] r8=0x%x r9=0x%x r10=0x%x r11=0x%x\n", r->r8, r->r9, r->r10,
-//          r->r11);
-//   printk("[irq] r12=0x%x r13=0x%x r14=0x%x r15=0x%x\n", r->r12, r->r13,
-//   r->r14,
-//          r->r15);
-// }
+void print_regs(regs_t* r) {
+  printk("[irq] err_code=0x%x int_no=0x%x\n", r->err_code, r->int_no);
+  printk("[irq] rax=0x%x rbx=0x%x rcx=0x%x rdx=0x%x\n", r->rax, r->rbx, r->rcx,
+         r->rdx);
+  printk("[irq] rsi=0x%x rdi=0x%x rbp=0x%x\n", r->rsi, r->rdi, r->rbp);
+  printk("[irq] r8=0x%x r9=0x%x r10=0x%x r11=0x%x\n", r->r8, r->r9, r->r10,
+         r->r11);
+  printk("[irq] r12=0x%x r13=0x%x r14=0x%x r15=0x%x\n", r->r12, r->r13, r->r14,
+         r->r15);
+  printk("[irq] rflags=0x%x\n ", r->rflags);
+}
 
 void irq_handler(regs_t* r) {
   printk("[irq] irq_handler called for int_no=0x%x\n", r->int_no);
-
   int_disable();
   if (r->int_no <= 47 && r->int_no >= 32) {
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {

@@ -8,7 +8,7 @@ LD    = $(TOOLCHAIN)/$(ARCH)-$(OS)-gcc
 STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 
 EMU       = qemu-system-x86_64
-EMU_ARGS  = -smp 1 -m 256M -vga virtio -d int
+EMU_ARGS  = -smp 1 -m 256M -vga virtio
 EMU_ARGS += -serial stdio -no-reboot -no-shutdown
 
 TMP_OBJ = /tmp/riria-obj
@@ -31,9 +31,12 @@ KERNEL_OBJS += $(patsubst kernel/%.c,$(TMP_OBJ)/%.o,$(wildcard kernel/*/*.c))
 KERNEL_OBJS += $(patsubst kernel/%.c,$(TMP_OBJ)/%.o,$(wildcard kernel/*/*/*.c))
 
 # assembly sources
+# stairway to assembly heaven
 KERNEL_ASMOBJS  = $(patsubst kernel/%.S,$(TMP_OBJ)/%.o,$(wildcard kernel/*.S))
 KERNEL_ASMOBJS += $(patsubst kernel/%.S,$(TMP_OBJ)/%.o,$(wildcard kernel/*/*.S))
 KERNEL_ASMOBJS += $(patsubst kernel/%.S,$(TMP_OBJ)/%.o,$(wildcard kernel/*/*/*.S))
+KERNEL_ASMOBJS += $(patsubst kernel/%.S,$(TMP_OBJ)/%.o,$(wildcard kernel/*/*/*/*.S))
+KERNEL_ASMOBJS += $(patsubst kernel/%.S,$(TMP_OBJ)/%.o,$(wildcard kernel/*/*/*/*/*.S))
 
 # here goes nothing
 .PHONY: all clean run
@@ -50,16 +53,10 @@ $(TMP_OBJ)/%.o: kernel/%.S
 	mkdir -p $(dir $@)
 	$(AS) -o $@ $<
 
-$(TMP_OBJ)/lib/%.o: lib/%.c
-	$(MAKE) -C lib TMP_OBJ=$(TMP_OBJ)
-
 OBJS = $(KERNEL_OBJS) $(KERNEL_ASMOBJS)
 
-lib/libriria.a: 
-	$(MAKE) -C lib TMP_OBJ=$(TMP_OBJ)
-
-$(BASE)/boot/kernel.bin: kernel/link.ld $(OBJS) lib/libriria.a
-	$(LD) $(KERNEL_LDFLAGS) -T kernel/link.ld $(OBJS) lib/libriria.a -o $@
+$(BASE)/boot/kernel.bin: kernel/link.ld $(OBJS)
+	$(LD) $(KERNEL_LDFLAGS) -T kernel/link.ld $(OBJS) -o $@
 
 # limine stuff
 $(BASE)/boot/limine/repo/limine-bios.sys:
@@ -108,4 +105,3 @@ clean:
 	rm -rf $(TMP_ISO)
 	rm -rf $(TMP_OBJ)
 	rm -rf $(TMP_FINAL)/image.iso
-	$(MAKE) -C lib clean

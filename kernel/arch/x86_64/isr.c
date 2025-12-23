@@ -1,7 +1,7 @@
 #include <riria/cpu/idt.h>
 #include <riria/cpu/isr.h>
 #include <riria/cpu/regs.h>
-#include <riria/libk.h>
+#include <riria/libc.h>
 #include <riria/syscall.h>
 
 #define ISR_COUNT 32
@@ -54,11 +54,11 @@ void isr_install(void) {
   // ISR_SET(29);
   // ISR_SET(30);
   // ISR_SET(31);
-  // ISR_SET(128);
+  ISR_SET(128);
 
   // syscall handler
-  // idt_set_gate(0x80, _isr128, 0x08, 0xEE);
-  // isr_install_handler(0x80, syscall_handler);
+  idt_set_gate(0x80, _isr128, 0x08, 0xEE);
+  isr_install_handler(0x80, syscall_handler);
 
   // // FIXME: optimally i would enable all but for now just set the ones i need
   // idt_set_gate(14, _isr14, 0x08, 0x8E);  // page fault
