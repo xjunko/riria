@@ -21,28 +21,34 @@ SECTIONS {
 
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
-    kern_start = .;
+    _text_begin = .;
     .text BLOCK(4K) : ALIGN(4K) {
         *(.text .text.*)
     } :text
+    _text_end = .;
 
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
+    _rodata_begin = .;
     .rodata BLOCK(4K) : ALIGN(4K) {
         *(.rodata .rodata.*)
     } :rodata
+    _rodata_end = .;
 
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
+    _data_begin = .;
     .data BLOCK(4K) : ALIGN(4K) {
         *(.data .data.*)
     } :data
+    _data_end = .;
 
+    _bss_begin = .;
     .bss BLOCK(4K) : ALIGN(4K) {
         *(.bss .bss.*)
         *(COMMON)
     } :data
-    kern_end = .;
+    _bss_end = .;
 
     end = .;
 

@@ -61,7 +61,7 @@ void isr_install(void) {
   isr_install_handler(0x80, syscall_handler);
 
   // // FIXME: optimally i would enable all but for now just set the ones i need
-  // idt_set_gate(14, _isr14, 0x08, 0x8E);  // page fault
+  idt_set_gate(14, _isr14, 0x08, 0x8E);  // page fault
 
   // for (int i = 0; i <= ISR_COUNT; i++) {
   //   idt_set_gate(isrs[i].idx, isrs[i].stub, 0x08, 0x8E);

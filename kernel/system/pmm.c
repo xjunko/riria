@@ -42,16 +42,14 @@
 #include <riria/mem.h>
 #include <riria/types.h>
 
-extern uint8_t kern_start[], kern_end[];
+extern uint8_t _text_begin[], _bss_end[];
 
 #define PMM_BITMAP_SIZE (1024 * 1024)
-static uint8_t bitmap[PMM_BITMAP_SIZE];
-
-#define ALIGN_UP(value, align) (((value) + (align)-1) & ~((align)-1))
-
 #define BITMAP_GET(index) (bitmap[(index) / 8] & (1 << ((index) % 8)))
 #define BITMAP_SET(index) (bitmap[(index) / 8] |= (1 << ((index) % 8)))
 #define BITMAP_CLEAR(index) (bitmap[(index) / 8] &= ~(1 << ((index) % 8)))
+
+static uint8_t bitmap[PMM_BITMAP_SIZE];
 
 static size_t highest_page = 0;
 static size_t used_pages = 0;
@@ -59,7 +57,7 @@ static size_t free_pages = 0;
 static size_t total_ram_pages = 0;
 
 void pmm_install(void) {
-  kprintf("[pmm] installing physical memory manager...\n");
+  kprintf("[pmm] PMM INIT...");
 
   size_t entry_count = memmap_request.response->entry_count;
   struct limine_memmap_entry** entries = memmap_request.response->entries;
@@ -71,7 +69,7 @@ void pmm_install(void) {
       highest_address = top;
     }
   }
-  kprintf("[pmm] highest address: 0x%lx\n", highest_address);
+  kprintf(", highest_address=0x%lx", highest_address);
 
   highest_page = highest_address / PAGE_SIZE;
   size_t max_bitmap_pages = PMM_BITMAP_SIZE * 8;
@@ -106,14 +104,13 @@ void pmm_install(void) {
   }
 
   free_pages = total_ram_pages;
-  kprintf("[pmm] total ram: %luMiB\n",
-          (total_ram_pages * PAGE_SIZE) / (1024 * 1024));
+  kprintf(", total_ram=%luMiB", (total_ram_pages * PAGE_SIZE) / (1024 * 1024));
 
   struct limine_executable_address_response* kaddr =
       executable_address_request.response;
   uintptr_t k_phys_start = kaddr->physical_base;
-  uintptr_t k_virt_start = (uintptr_t)kern_start;
-  uintptr_t k_virt_end = (uintptr_t)kern_end;
+  uintptr_t k_virt_start = (uintptr_t)_text_begin;
+  uintptr_t k_virt_end = (uintptr_t)_bss_end;
   uintptr_t k_size = k_virt_end - k_virt_start;
   uintptr_t k_phys_end = k_phys_start + ALIGN_UP(k_size, PAGE_SIZE);
 
@@ -157,6 +154,7 @@ void pmm_install(void) {
   }
 
   used_pages = total_ram_pages - free_pages;
+  kprintf(", OK!\n");
 }
 
 void* pmm_allocate(void) {
