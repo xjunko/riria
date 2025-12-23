@@ -11,13 +11,15 @@ static struct {
 
 void idt_set_gate(uint8_t num, idt_gate base, uint16_t segment_selector,
                   uint8_t flags) {
-  ENTRY(num).base_low = (uintptr_t)base & 0xFFFF;
-  ENTRY(num).base_high = ((uintptr_t)base >> 16) & 0xFFFF;
   ENTRY(num).segment_selector = segment_selector;
-  ENTRY(num).reserved = 0;
 
-  // Use the flags as-is (DPL is encoded in flags parameter)
+  ENTRY(num).base_low = (uint16_t)base;
+  ENTRY(num).base_middle = ((uint16_t)base >> 16);
+  ENTRY(num).base_high = ((uint32_t)base >> 32);
+
+  ENTRY(num).ist = 0;
   ENTRY(num).flags = flags;
+  ENTRY(num).reserved = 0;
 }
 
 void idt_install(void) {
@@ -27,6 +29,7 @@ void idt_install(void) {
   memset(&ENTRY(0), 0, sizeof(idt.entries));
 
   printk("[cpu] IDT=0x%x\n", idtp->base);
-
-  // idt_flush((uintptr_t)idtp);
+  printk("[cpu] IDT INIT...");
+  idt_flush((uintptr_t)idtp);
+  printk(" OK!\n");
 }

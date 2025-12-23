@@ -12,18 +12,18 @@
 #include <riria/serial.h>
 #include <riria/types.h>
 
-extern void* end;
+// extern void* end;
 
 // FIXME: 64bit conversion
 void kmain(void) {
   serial_install();  // will be used for printk
-  printk("[sys] booted!\n");
+  printk("[sys] booting...\n");
 
   boot_verify();
 
-  // // bare minimum
-  // gdt_install();
-  // idt_install();
+  // bare minimum
+  gdt_install();
+  idt_install();
   // irq_install();
   // isr_install();
 
@@ -76,6 +76,8 @@ void kmain(void) {
   // uint32_t val = *invalid_ptr;
   // printk("invalid read returned 0x%x\n", val);
 
-  // while (1) {
-  // }
+  // asm volatile("int $32");
+  printk("[sys] halted.\n");
+  while (1) {
+  }
 }

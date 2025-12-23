@@ -15,6 +15,7 @@ static tss_entry_t tss __attribute__((used, aligned(16)));
 
 void gdt_set_gate(uint8_t idx, uint64_t base, uint64_t limit, uint8_t access,
                   uint8_t granularity) {
+  // in 64bit, base and limit value are ignored.
   ENTRY(idx).base_low = (base & 0xFFFF);
   ENTRY(idx).base_middle = (base >> 16) & 0xFF;
   ENTRY(idx).base_high = (base >> 24) & 0xFF;
@@ -34,19 +35,23 @@ void gdt_install(void) {
   gdtp->limit = sizeof(gdt.entries) - 1;
   gdtp->base = (uintptr_t)&ENTRY(0);
 
-  gdt_set_gate(0, 0, 0, 0, 0);              // null
-  gdt_set_gate(1, 0, 0xFFFFF, 0x9A, 0xCF);  // code segment
-  gdt_set_gate(2, 0, 0xFFFFF, 0x92, 0xCF);  // data segment
-  gdt_set_gate(3, 0, 0xFFFFF, 0xFA, 0xCF);  // user code segment
-  gdt_set_gate(4, 0, 0xFFFFF, 0xF2, 0xCF);  // user data segment
+  gdt_set_gate(0, 0, 0, 0, 0);        // 0x0 - null
+  gdt_set_gate(1, 0, 0, 0x9A, 0x20);  // 0x8 - code segment
+  gdt_set_gate(2, 0, 0, 0x92, 0x0);   // 0x10 - data segment
+  gdt_set_gate(3, 0, 0, 0xF2, 0x20);  // 0x18 - user code segment
+  gdt_set_gate(4, 0, 0, 0xFA, 0x0);   // 0x20 - user data segment
 
-  write_tss(5, 0x10, 0x0);
+  // write_tss(5, 0x10, 0x0);
 
   printk("[cpu] GDT=0x%x\n", gdtp->base);
-  printk("[cpu] TSS=0x%x\n", (uintptr_t)&gdt.tss);
+  // printk("[cpu] TSS=0x%x\n", (uintptr_t)&gdt.tss);
+  printk("[cpu] GDT INIT...");
 
-  // gdt_flush((uintptr_t)gdtp);
+  gdt_flush((uintptr_t)gdtp);
   // tss_flush();
+
+  printk(" OK!\n");  // it's not a proper osdev project if it doesnt have GDT
+                     // INIT... OK /j
 }
 
 static void write_tss(uint32_t num, uint16_t ss0, uint32_t esp0) {

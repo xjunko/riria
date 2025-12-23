@@ -4,9 +4,11 @@
 typedef struct idt_entry {
   uint16_t base_low;
   uint16_t segment_selector;
-  uint8_t reserved;
+  uint8_t ist;
   uint8_t flags;
-  uint16_t base_high;
+  uint16_t base_middle;
+  uint32_t base_high;
+  uint32_t reserved;
 } __attribute__((packed)) idt_entry_t;
 
 typedef struct idt_ptr {
