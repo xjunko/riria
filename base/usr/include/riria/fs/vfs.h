@@ -7,12 +7,14 @@
 
 typedef ssize_t (*fs_read)(const char* path, void* buffer, size_t sz);
 typedef ssize_t (*fs_write)(const char* path, const void* buffer, size_t sz);
+typedef ssize_t (*fs_seek)(const char* path, size_t offset, int whence);
 typedef bool (*fs_exists)(const char* path);
 
 // what we expect from any fs implementation
 typedef struct vfs_impl {
   fs_read read;
   fs_write write;
+  fs_seek seek;
   fs_exists exists;
 } vfs_impl_t;
 
@@ -35,5 +37,6 @@ void vfs_install(void);
 vfs_file_t* vfs_open(const char*, int, int);
 int vfs_read(vfs_file_t*, void*, size_t);
 int vfs_write(vfs_file_t*, const void*, size_t);
+int vfs_seek(vfs_file_t*, size_t, int);
 int vfs_close(vfs_file_t*);
 int vfs_exists(vfs_file_t*);

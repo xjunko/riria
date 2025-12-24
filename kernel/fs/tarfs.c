@@ -21,6 +21,7 @@ static void _tarfs_add_file(const char* loc) {
   file->loc = loc_wo_dot;
   file->read = tarfs_read;
   file->write = NULL;
+  file->seek = tarfs_seek;
   file->next = NULL;
 
   if (!tarfs_head) {
@@ -43,6 +44,9 @@ static tarfs_file_t* _tarfs_find_file(const char* path) {
     curr = curr->next;
   }
 
+  printf("tarfs: file not found: %s\n", path);
+  UNREACHABLE();
+
   return NULL;
 }
 
@@ -58,9 +62,6 @@ static int oct2bin(unsigned char* str, int size) {
 }
 
 ssize_t tarfs_read(const char* path, void* buffer, size_t sz) {
-  UNUSED(buffer);
-  UNUSED(sz);
-
   char tar_path[256];
   tar_path[0] = '.';
   strcpy(tar_path + 1, path);
@@ -71,6 +72,14 @@ ssize_t tarfs_read(const char* path, void* buffer, size_t sz) {
     char* path = (char*)ptr;
 
     if (!memcmp(ptr, tar_path, strlen(tar_path) + 1)) {
+      // NOTE: this is fairly hacky, but it works for now
+      tarfs_file_t* file = _tarfs_find_file(tar_path + 1);
+      ASSERT(file);
+
+      // HACK: oooh spooky
+      file_size -= file->seek_pos;
+      ptr += 512 + file->seek_pos;
+
       unsigned char* data = ptr + 512;
       size_t bytes_to_read = (file_size < (int)sz) ? file_size : (int)sz;
 
@@ -87,6 +96,18 @@ ssize_t tarfs_read(const char* path, void* buffer, size_t sz) {
   return -1;
 }
 
+ssize_t tarfs_seek(const char* path, size_t offset, int whence) {
+  if (!path) return -1;
+
+  // TODO: use whence
+  UNUSED(whence);
+
+  tarfs_file_t* file = _tarfs_find_file(path);
+  if (!file) return -1;
+  file->seek_pos = offset;
+  return file->seek_pos;
+}
+
 bool tarfs_exists(const char* path) {
   if (!path) return 0;
 
@@ -99,6 +120,7 @@ void tarfs_init(vfs_impl_t* impl) {
   impl->read = tarfs_read;
   impl->write = NULL;
   impl->exists = tarfs_exists;
+  impl->seek = tarfs_seek;
 
   for (uint64_t i = 0; i < module_request.response->module_count; i++) {
     if (strcmp(module_request.response->modules[i]->path,

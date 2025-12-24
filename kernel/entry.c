@@ -49,33 +49,21 @@ void kmain(void) {
   // test vfs
   // /dev/stdout
   vfs_file_t* serial_fs = vfs_open("/dev/stdout", 0, 0);
-  if (!serial_fs) panic("failed to get /dev/stdout");
+  ASSERT(serial_fs);
   int ret = vfs_write(serial_fs, "hello, from vfs!\n", 18);
-  if (ret < 0) {
-    printf("ret_code: %d\n", ret);
-    panic("failed to write to /dev/stdout");
-  }
+  ASSERT(ret >= 0);
   ret = vfs_close(serial_fs);
-  if (ret < 0) {
-    printf("ret_code: %d\n", ret);
-    panic("failed to close /dev/stdout");
-  }
+  ASSERT(ret >= 0);
 
   // /dev/zero
   void* buffer = malloc(16);
   memset(buffer, 0x69, 16);
   vfs_file_t* zero_fs = vfs_open("/dev/zero", 0, 0);
-  if (!zero_fs) panic("failed to get /dev/zero");
+  ASSERT(zero_fs);
   ret = vfs_read(zero_fs, buffer, 16);
-  if (ret < 0) {
-    printf("ret_code: %d\n", ret);
-    panic("failed to read from /dev/zero");
-  }
+  ASSERT(ret >= 0);
   ret = vfs_close(zero_fs);
-  if (ret < 0) {
-    printf("ret_code: %d\n", ret);
-    panic("failed to close /dev/zero");
-  }
+  ASSERT(ret >= 0);
 
   // check if the buffer is zeroed
   for (int i = 0; i < 16; i++) {
@@ -86,18 +74,12 @@ void kmain(void) {
 
   // /init/human_48k_stereo.pcm
   vfs_file_t* tar_fs = vfs_open("/init/human_48k_stereo.pcm", 0, 0);
-  if (!tar_fs) panic("failed to get /init/human_48k_stereo.pcm");
+  ASSERT(tar_fs);
   buffer = malloc(4096);
   ret = vfs_read(tar_fs, buffer, 4096);
-  if (ret < 0) {
-    printf("ret_code: %d\n", (int)ret);
-    panic("failed to read from /init/human_48k_stereo.pcm");
-  }
+  ASSERT(ret >= 0);
   ret = vfs_close(tar_fs);
-  if (ret < 0) {
-    printf("ret_code: %d\n", (int)ret);
-    panic("failed to close /init/human_48k_stereo.pcm");
-  }
+  ASSERT(ret >= 0);
 
   for (size_t i = 0; i < 16; i++) {
     printf("%02x ", ((uint8_t*)buffer)[i]);
@@ -111,8 +93,35 @@ void kmain(void) {
                : "a"(4), "b"(1), "c"("hello, from syscall!\n"),
                  "d"(22));  // syscall write(4) to serial(1)
 
-  printf("[sys] halted.\n");
+  // test audio driver
+  ac97_set_volume(50);
+  vfs_file_t* audio_fs = vfs_open("/init/human_48k_stereo.pcm", 0, 0);
+  ASSERT(audio_fs);
 
+  size_t chunk_size = 128000;
+  int pcm_pos = 0;
+  buffer = malloc(chunk_size);
+  for (;;) {
+    while (!ac97_can_write())
+      ;
+    vfs_seek(audio_fs, pcm_pos, 0);
+    int bytes_read = vfs_read(audio_fs, buffer, chunk_size);
+    ASSERT(bytes_read >= 0);
+
+    if (bytes_read == 0) break;
+
+    int total_written = 0;
+    while (total_written < bytes_read) {
+      int written = ac97_write_pcm((uint8_t*)buffer + total_written,
+                                   bytes_read - total_written);
+      total_written += written;
+    }
+    pcm_pos += bytes_read;
+  }
+  ret = vfs_close(audio_fs);
+  ASSERT(ret >= 0);
+
+  printf("[sys] halted.\n");
   int i = 0;
   while (1) {
     i++;
