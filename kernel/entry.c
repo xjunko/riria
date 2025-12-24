@@ -8,7 +8,6 @@
 #include <riria/drivers/ac97.h>
 #include <riria/drivers/framebuffer.h>
 #include <riria/drivers/pci.h>
-#include <riria/drivers/pit.h>
 #include <riria/drivers/ps2.h>
 #include <riria/drivers/serial.h>
 #include <riria/fs/vfs.h>
