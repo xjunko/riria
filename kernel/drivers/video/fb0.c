@@ -65,6 +65,8 @@ static char term_buffer[4096] = {'\0'};
 static size_t term_buffer_index = 0;
 
 void framebuffer_write(const char str[]) {
+  if (fb_info.addr == NULL) return;
+
   if (fb_info.ft_ctx == NULL) {
     size_t len = strlen(str);
     if (term_buffer_index + len >= sizeof(term_buffer)) {
