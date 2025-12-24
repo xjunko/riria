@@ -1,4 +1,4 @@
-#include <riria/libc.h>
+#include <stdio.h>
 
 void* memcpy(void* restrict dest, const void* restrict src, size_t n) {
   uint8_t* restrict pdest = (uint8_t* restrict)dest;

@@ -38,9 +38,9 @@
  */
 
 #include <riria/boot.h>
-#include <riria/libc.h>
 #include <riria/mem.h>
 #include <riria/types.h>
+#include <stdio.h>
 
 #define KERNEL_HEAP_START 0xFFFF810000000000
 #define KERNEL_INITIAL_PAGES 256

@@ -1,5 +1,5 @@
 
-#include <riria/libc.h>
+#include <stdio.h>
 
 int strncmp(const char* s1, const char* s2, unsigned long n) {
   unsigned long i = 0;

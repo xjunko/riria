@@ -1,7 +1,9 @@
 #include <riria/fs/devfs.h>
 #include <riria/fs/vfs.h>
-#include <riria/libc.h>
 #include <riria/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 static vfs_t mountpoints[VFS_MAX_MOUNTPOINTS];
 static vfs_file_t* open_files[VFS_MAX_FILE_DESCRIPTORS];
@@ -62,7 +64,7 @@ vfs_file_t* vfs_open(const char* path, int flags, int mode) {
   return file;
 }
 
-int vfs_read(vfs_file_t* file, const void* buffer, size_t sz) {
+int vfs_read(vfs_file_t* file, void* buffer, size_t sz) {
   if (!file) return -1;
   if (!file->loc) return -2;
   if (!file->fs) return -3;

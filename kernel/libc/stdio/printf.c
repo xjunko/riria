@@ -1,6 +1,6 @@
 #include <riria/drivers/framebuffer.h>
 #include <riria/drivers/serial.h>
-#include <riria/libc.h>
+#include <stdio.h>
 
 #define NANOPRINTF_IMPLEMENTATION
 #define NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS 1

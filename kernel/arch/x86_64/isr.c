@@ -1,8 +1,8 @@
 #include <riria/cpu/idt.h>
 #include <riria/cpu/isr.h>
 #include <riria/cpu/regs.h>
-#include <riria/libc.h>
 #include <riria/syscall.h>
+#include <stdio.h>
 
 #define ISR_COUNT 32
 

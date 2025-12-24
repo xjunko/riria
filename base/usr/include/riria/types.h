@@ -6,4 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define UNUSED(x) (void)(x)
+
+void kprintf(const char*, ...);
 void panic(const char*);

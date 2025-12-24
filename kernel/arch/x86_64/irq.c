@@ -1,8 +1,8 @@
 #include <riria/cpu/idt.h>
 #include <riria/cpu/io.h>
 #include <riria/cpu/irq.h>
-#include <riria/libc.h>
 #include <riria/types.h>
+#include <stdio.h>
 
 #define PIC1 0x20
 #define PIC1_COMMAND PIC1

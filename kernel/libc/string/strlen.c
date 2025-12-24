@@ -1,4 +1,4 @@
-#include <riria/libc.h>
+#include <stdio.h>
 
 size_t strlen(const char* str) {
   const char* s = str;

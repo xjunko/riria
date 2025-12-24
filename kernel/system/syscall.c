@@ -1,8 +1,8 @@
 #include <riria/cpu/isr.h>
 #include <riria/cpu/regs.h>
 #include <riria/drivers/serial.h>
-#include <riria/libc.h>
 #include <riria/types.h>
+#include <stdio.h>
 
 // impl
 #define SYSCALL_WRITE 4

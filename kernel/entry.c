@@ -8,9 +8,11 @@
 #include <riria/drivers/ps2.h>
 #include <riria/drivers/serial.h>
 #include <riria/fs/vfs.h>
-#include <riria/libc.h>
 #include <riria/mem.h>
 #include <riria/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 void kmain(void) {
   serial_install();  // will be used for printk

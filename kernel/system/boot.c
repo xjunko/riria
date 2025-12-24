@@ -1,6 +1,6 @@
 #include <riria/boot.h>
-#include <riria/libc.h>
 #include <riria/types.h>
+#include <stdio.h>
 
 // clang-format off
 __attribute__((used, section(".limine_requests")))

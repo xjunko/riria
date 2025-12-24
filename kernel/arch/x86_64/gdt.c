@@ -1,7 +1,9 @@
 #include <riria/cpu/gdt.h>
 #include <riria/cpu/tss.h>
-#include <riria/libc.h>
 #include <riria/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 __attribute__((aligned(16))) uint8_t kernel_stack[16384];
 __attribute__((aligned(16))) uint8_t user_stack[65536];
@@ -59,6 +61,9 @@ void gdt_install(void) {
 }
 
 static void write_tss(uint32_t num, uint16_t ss0, uint32_t esp0) {
+  UNUSED(ss0);
+  UNUSED(esp0);
+
   tss_entry_t* tss = &gdt.tss;
   uintptr_t base = (uintptr_t)tss;
   uintptr_t limit = sizeof(*tss) - 1;

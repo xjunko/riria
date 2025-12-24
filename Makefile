@@ -18,11 +18,12 @@ TMP_FINAL = /tmp/riria-final
 BASE = ./base
 
 # compiler setup
-override KERNEL_CFLAGS  = -Wall -Wextra -ffreestanding -O0
+override KERNEL_CFLAGS  = -Wall -Wextra -Werror -ffreestanding -O0
 override KERNEL_CFLAGS += -fno-stack-protector -fno-stack-check -fno-lto  \
                           -fno-PIC -ffunction-sections -m64 -march=x86-64  \
 						  -mabi=sysv -mno-80387 -mno-mmx -mno-sse -mno-sse2 \
-						  -mno-red-zone -mcmodel=kernel
+						  -mno-red-zone -mcmodel=kernel \
+						  -Wno-error=unused-function
 override KERNEL_LDFLAGS = -nostdlib -static -z max-page-size=0x1000 
 
 # kernel sources
@@ -49,7 +50,7 @@ $(TMP_OBJ):
 
 $(TMP_OBJ)/%.o: kernel/%.c
 	mkdir -p $(dir $@)
-	$(CC) $(KERNEL_CFLAGS) -g -I$(BASE)/usr/include -o $@ -c $<
+	$(CC) $(KERNEL_CFLAGS) -g -I$(BASE)/usr/include -Ikernel/libc/include -o $@ -c $<
 
 $(TMP_OBJ)/%.o: kernel/%.S
 	mkdir -p $(dir $@)

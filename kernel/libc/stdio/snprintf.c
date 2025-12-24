@@ -1,4 +1,6 @@
-#include <riria/libc.h>
+#include <stdio.h>
+
+#include "nanoprintf.h"
 
 int snprintf(char* buf, size_t size, const char* fmt, ...) {
   va_list args;

@@ -38,11 +38,14 @@
  */
 
 #include <riria/boot.h>
+#include <riria/cpu/irq.h>
 #include <riria/cpu/isr.h>
 #include <riria/cpu/regs.h>
-#include <riria/libc.h>
 #include <riria/mem.h>
 #include <riria/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 extern uint8_t _text_begin[], _text_end[];
 extern uint8_t _rodata_begin[], _rodata_end[];
@@ -155,6 +158,9 @@ fail:
 
 bool vmm_unmap_page(pagemap_t* pagemap, uintptr_t virt, uintptr_t phys,
                     uint64_t flags) {
+  UNUSED(phys);
+  UNUSED(flags);
+
   if (virt % PAGE_SIZE != 0) {
     panic("page not aligned in vmm_unmap_page");
   }
@@ -313,5 +319,6 @@ void vmm_install(void) {
 
 void vmm_pagefault(regs_t* r) {
   // todo: handle ts
+  UNUSED(r);
   panic("erm, page fault occurred");
 }

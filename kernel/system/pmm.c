@@ -38,9 +38,11 @@
  */
 
 #include <riria/boot.h>
-#include <riria/libc.h>
+#include <riria/cpu/irq.h>
 #include <riria/mem.h>
 #include <riria/types.h>
+#include <stdio.h>
+#include <string.h>
 
 extern uint8_t _text_begin[], _bss_end[];
 

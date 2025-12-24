@@ -1,4 +1,4 @@
-#include <riria/libc.h>
 #include <riria/mem.h>
+#include <stdlib.h>
 
 void* malloc(size_t size) { return kmalloc(size); }

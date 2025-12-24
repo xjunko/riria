@@ -1,6 +1,8 @@
 #include <riria/fs/devfs.h>
-#include <riria/libc.h>
 #include <riria/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 static devfs_dev_t* head = NULL;
 static devfs_dev_t* tail = NULL;

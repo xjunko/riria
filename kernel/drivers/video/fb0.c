@@ -1,7 +1,8 @@
 #include <riria/boot.h>
 #include <riria/drivers/framebuffer.h>
-#include <riria/libc.h>
 #include <riria/types.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "flanterm/flanterm.h"
 #include "flanterm/flanterm_backends/fb.h"
