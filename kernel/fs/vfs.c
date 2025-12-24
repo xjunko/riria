@@ -1,4 +1,5 @@
 #include <riria/fs/devfs.h>
+#include <riria/fs/tarfs.h>
 #include <riria/fs/vfs.h>
 #include <riria/types.h>
 #include <stdio.h>
@@ -107,11 +108,16 @@ int vfs_close(vfs_file_t* file) {
 }
 
 void vfs_install(void) {
-  kprintf("[vfs] VFS INIT...");
+  printf("[vfs] VFS INIT...");
   vfs_impl_t* devfs = malloc(sizeof(vfs_file_t));
   mountpoints[0].mnt = "/dev/";
   mountpoints[0].impl = devfs;
   devfs_init(devfs);
 
-  kprintf("ALL OK!\n");
+  vfs_impl_t* tarfs = malloc(sizeof(vfs_file_t));
+  mountpoints[1].mnt = "/init/";
+  mountpoints[1].impl = tarfs;
+  tarfs_init(tarfs);
+
+  printf("ALL OK!\n");
 }

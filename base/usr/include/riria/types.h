@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 // we dont have a proper libc yet, so this will have to do for now
 #ifdef __i386__
@@ -22,13 +23,13 @@ typedef int64_t ssize_t;
 
 #define UNUSED(x) (void)(x)
 
-#define ASSERT(cond)                                                \
-  do {                                                              \
-    if (!(cond)) {                                                  \
-      kprintf("[err] Assertion failed: %s\n", #cond);               \
-      kprintf("[err] In file: %s, line: %d\n", __FILE__, __LINE__); \
-      panic("Assertion failure");                                   \
-    }                                                               \
+#define ASSERT(cond)                                               \
+  do {                                                             \
+    if (!(cond)) {                                                 \
+      printf("[err] Assertion failed: %s\n", #cond);               \
+      printf("[err] In file: %s, line: %d\n", __FILE__, __LINE__); \
+      panic("Assertion failure");                                  \
+    }                                                              \
   } while (0)
 
 #define UNREACHABLE() ASSERT(0)

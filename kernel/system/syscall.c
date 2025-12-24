@@ -28,6 +28,6 @@ void syscall_handler(regs_t* r) {
       r->rax = syscall_write(r);
       break;
     default:
-      kprintf("[sys] unknown syscall: %d\n", r->rax);
+      printf("[sys] unknown syscall: %d\n", r->rax);
   }
 }

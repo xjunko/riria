@@ -151,7 +151,7 @@ bool vmm_map_page(pagemap_t* pagemap, uintptr_t virt, uintptr_t phys,
   return true;
 
 fail:
-  kprintf("failed to map page for virt=0x%x", virt);
+  printf("failed to map page for virt=0x%x", virt);
   panic("vmm_map_page failure");
   return false;
 }
@@ -225,8 +225,31 @@ bool vmm_unmap_page(pagemap_t* pagemap, uintptr_t virt, uintptr_t phys,
   return true;
 }
 
+uintptr_t vmm_virt_to_phys(pagemap_t* pagemap, uintptr_t virt) {
+  size_t pml4_idx = (virt >> 39) & 0x1FF;
+  size_t pdpt_idx = (virt >> 30) & 0x1FF;
+  size_t pd_idx = (virt >> 21) & 0x1FF;
+  size_t pt_idx = (virt >> 12) & 0x1FF;
+
+  uint64_t* pml4 = pagemap->base_virt;
+  uint64_t* pdpt = vmm_get_next_level(pml4, pml4_idx, false, 0);
+  if (pdpt == NULL) return (uintptr_t)-1;
+  uint64_t* pd = vmm_get_next_level(pdpt, pdpt_idx, false, 0);
+  if (pd == NULL) return (uintptr_t)-1;
+  uint64_t* pt = vmm_get_next_level(pd, pd_idx, false, 0);
+  if (pt == NULL) return (uintptr_t)-1;
+
+  uint64_t entry = pt[pt_idx];
+
+  if (!(entry & PTE_PRESENT)) return (uintptr_t)-1;
+
+  uintptr_t phys = PTE_GET_ADDR(entry);
+  uintptr_t offset = virt % PAGE_SIZE;
+  return phys + offset;
+}
+
 void vmm_install(void) {
-  kprintf("[vmm] VMM INIT...");
+  printf("[vmm] VMM INIT...");
   void* pml4_phys = pmm_allocate();
 
   if (!pml4_phys) {
@@ -311,7 +334,7 @@ void vmm_install(void) {
   }
 
   vmm_switch_pagemap(kernel_pagemap);
-  kprintf(" OK!\n");
+  printf(" OK!\n");
 
   // page fault handler
   isr_install_handler(14, vmm_pagefault);

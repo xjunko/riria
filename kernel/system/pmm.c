@@ -59,7 +59,7 @@ static size_t free_pages = 0;
 static size_t total_ram_pages = 0;
 
 void pmm_install(void) {
-  kprintf("[pmm] PMM INIT...");
+  printf("[pmm] PMM INIT...");
 
   size_t entry_count = memmap_request.response->entry_count;
   struct limine_memmap_entry** entries = memmap_request.response->entries;
@@ -71,7 +71,7 @@ void pmm_install(void) {
       highest_address = top;
     }
   }
-  kprintf(", highest_address=0x%lx", highest_address);
+  printf(", highest_address=0x%lx", highest_address);
 
   highest_page = highest_address / PAGE_SIZE;
   size_t max_bitmap_pages = PMM_BITMAP_SIZE * 8;
@@ -106,7 +106,7 @@ void pmm_install(void) {
   }
 
   free_pages = total_ram_pages;
-  kprintf(", total_ram=%luMiB", (total_ram_pages * PAGE_SIZE) / (1024 * 1024));
+  printf(", total_ram=%luMiB", (total_ram_pages * PAGE_SIZE) / (1024 * 1024));
 
   struct limine_executable_address_response* kaddr =
       executable_address_request.response;
@@ -156,7 +156,7 @@ void pmm_install(void) {
   }
 
   used_pages = total_ram_pages - free_pages;
-  kprintf(", OK!\n");
+  printf(", OK!\n");
 }
 
 void* pmm_allocate(void) {

@@ -30,8 +30,8 @@ void idt_install(void) {
   idtp->base = (uintptr_t)&ENTRY(0);
   memset(&ENTRY(0), 0, sizeof(idt.entries));
 
-  kprintf("[cpu] IDT=0x%x\n", idtp->base);
-  kprintf("[cpu] IDT INIT...");
+  printf("[cpu] IDT=0x%x\n", idtp->base);
+  printf("[cpu] IDT INIT...");
   idt_flush((uintptr_t)idtp);
-  kprintf(" OK!\n");
+  printf(" OK!\n");
 }
