@@ -1,6 +1,7 @@
 ARCH      = x86_64
 OS        = elf
-TOOLCHAIN = ~/Projects/Tooling/Cross/$(ARCH)/gcc-$(ARCH)-$(OS)/bin
+VERSION   = 15.2.0
+TOOLCHAIN = ~/Projects/Tooling/Cross/$(ARCH)/gcc-$(ARCH)-$(OS)_$(VERSION)/bin
 
 CC    = $(TOOLCHAIN)/$(ARCH)-$(OS)-gcc
 AS    = $(TOOLCHAIN)/$(ARCH)-$(OS)-as
@@ -10,7 +11,7 @@ STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 EMU       = qemu-system-x86_64
 EMU_ARGS  = -smp 1 -m 128M -vga virtio
 EMU_ARGS += -serial stdio -no-reboot -no-shutdown \
-            -audio driver=sdl,model=ac97,id=0 -enable-kvm -d int
+            -audio driver=sdl,model=ac97,id=0
 
 TMP_OBJ = /tmp/riria-obj
 TMP_ISO = /tmp/riria-iso
@@ -20,11 +21,13 @@ BASE = ./base
 
 # compiler setup
 override KERNEL_CFLAGS  = -Wall -Wextra -Werror -ffreestanding -O3
-override KERNEL_CFLAGS += -fno-stack-protector -fno-stack-check -fno-lto  \
-                          -fno-PIC -ffunction-sections -m64 -march=x86-64  \
-						  -mabi=sysv -mno-80387 -mno-mmx -mno-sse -mno-sse2 \
-						  -mno-red-zone -mcmodel=kernel \
+override KERNEL_CFLAGS += -fno-stack-protector -fstack-check -fsanitize=undefined  \
+						  -fno-lto                                                 \
+                          -fno-PIC -ffunction-sections -m64 -march=x86-64          \
+						  -mabi=sysv -mno-80387 -mno-mmx -mno-sse -mno-sse2        \
+						  -mno-red-zone -mcmodel=kernel                            \
 						  -Wno-error=unused-function -Wno-error=unused-variable
+						  
 override KERNEL_LDFLAGS = -nostdlib -static -z max-page-size=0x1000 
 
 # kernel sources
