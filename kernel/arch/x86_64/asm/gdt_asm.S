@@ -5,22 +5,21 @@
 .type gdt_flush, @function
 
 gdt_flush:
-    # load the new gdt
     lgdt (%rdi)
 
-    # reload segments
+    pushq $0x08
+    lea reload_cs(%rip), %rax
+    pushq %rax
+    retfq
+
+reload_cs:
     mov $0x10, %ax
     mov %ax, %ds
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
     mov %ax, %ss
-
-    # reload cs, far jump
-    pushq $0x08
-    lea .flush(%rip), %rax
-    pushq %rax
-    lretq
+    ret
 
 .flush:
     ret
