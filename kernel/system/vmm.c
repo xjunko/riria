@@ -341,7 +341,12 @@ void vmm_install(void) {
 }
 
 void vmm_pagefault(regs_t* r) {
-  // todo: handle ts
-  UNUSED(r);
+  // print the registers and panic
+  uint64_t fault_addr;
+  asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
+
+  printf("[err] page fault at address 0x%x\n", fault_addr);
+  print_regs(r);
+
   panic("erm, page fault occurred");
 }

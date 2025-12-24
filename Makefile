@@ -8,7 +8,7 @@ LD    = $(TOOLCHAIN)/$(ARCH)-$(OS)-gcc
 STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 
 EMU       = qemu-system-x86_64
-EMU_ARGS  = -smp 1 -m 512M -vga virtio
+EMU_ARGS  = -smp 1 -m 128M -vga virtio
 EMU_ARGS += -serial stdio -no-reboot -no-shutdown \
             -audio driver=sdl,model=ac97,id=0 -enable-kvm -d int
 
