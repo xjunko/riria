@@ -180,6 +180,16 @@ try_again:
   goto try_again;
 }
 
+void* kmalloc_phys(size_t sz, uintptr_t* phys) {
+  if (sz == 0) return NULL;
+  void* virt_addr = kmalloc(sz);
+  ASSERT(virt_addr != NULL);
+  if (phys) {
+    *phys = vmm_virt_to_phys(kernel_pagemap, (uintptr_t)virt_addr);
+  }
+  return virt_addr;
+}
+
 void kfree(void* ptr) {
   if (!ptr) return;
 

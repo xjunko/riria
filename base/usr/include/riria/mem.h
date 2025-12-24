@@ -10,6 +10,7 @@ typedef struct heap_block {
 
 #define MIN_ALLOC_SIZE sizeof(heap_block_t)
 #define HEAP_ALIGNMENT 16
+
 #define ALIGN_UP_HEAP(size) \
   (((size) + HEAP_ALIGNMENT - 1) & ~(HEAP_ALIGNMENT - 1))
 
@@ -17,6 +18,7 @@ void heap_install(void);
 int heap_expand_pages(size_t);
 
 void* kmalloc(size_t);
+void* kmalloc_phys(size_t, uintptr_t*);
 void kfree(void*);
 
 // pmm
@@ -59,6 +61,7 @@ pagemap_t* vmm_new_pagemap(void);
 void vmm_switch_pagemap(pagemap_t*);
 void vmm_invalidate_page(uintptr_t);
 uint64_t* vmm_get_next_level(uint64_t*, size_t, bool, uint64_t);
+uintptr_t vmm_virt_to_phys(pagemap_t*, uintptr_t);
 bool vmm_map_page(pagemap_t*, uintptr_t, uintptr_t, uint64_t);
 bool vmm_unmap_page(pagemap_t*, uintptr_t, uintptr_t, uint64_t);
 
