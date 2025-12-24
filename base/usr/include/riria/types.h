@@ -17,7 +17,21 @@ typedef uint64_t size_t;
 typedef int64_t ssize_t;
 #endif
 
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
 #define UNUSED(x) (void)(x)
+
+#define ASSERT(cond)                                                \
+  do {                                                              \
+    if (!(cond)) {                                                  \
+      kprintf("[err] Assertion failed: %s\n", #cond);               \
+      kprintf("[err] In file: %s, line: %d\n", __FILE__, __LINE__); \
+      panic("Assertion failure");                                   \
+    }                                                               \
+  } while (0)
+
+#define UNREACHABLE() ASSERT(0)
 
 void kprintf(const char*, ...);
 void panic(const char*);
