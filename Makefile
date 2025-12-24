@@ -8,8 +8,9 @@ LD    = $(TOOLCHAIN)/$(ARCH)-$(OS)-gcc
 STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 
 EMU       = qemu-system-x86_64
-EMU_ARGS  = -smp 1 -m 128M -vga virtio
-EMU_ARGS += -serial stdio -no-reboot -no-shutdown
+EMU_ARGS  = -smp 1 -m 512M -vga virtio
+EMU_ARGS += -serial stdio -no-reboot -no-shutdown \
+            -audio driver=sdl,model=ac97,id=0 -enable-kvm
 
 TMP_OBJ = /tmp/riria-obj
 TMP_ISO = /tmp/riria-iso
@@ -23,7 +24,7 @@ override KERNEL_CFLAGS += -fno-stack-protector -fno-stack-check -fno-lto  \
                           -fno-PIC -ffunction-sections -m64 -march=x86-64  \
 						  -mabi=sysv -mno-80387 -mno-mmx -mno-sse -mno-sse2 \
 						  -mno-red-zone -mcmodel=kernel \
-						  -Wno-error=unused-function
+						  -Wno-error=unused-function -Wno-error=unused-variable
 override KERNEL_LDFLAGS = -nostdlib -static -z max-page-size=0x1000 
 
 # kernel sources
@@ -74,6 +75,9 @@ $(TMP_FINAL)/image.iso: $(TMP_OBJ) $(BASE)/boot/kernel.bin $(BASE)/boot/limine/r
 	mkdir -p $(TMP_ISO)/boot/limine/
 	mkdir -p $(TMP_ISO)/EFI/BOOT
 	
+	# copy initramfs
+	cp $(BASE)/boot/initramfs.tar $(TMP_ISO)/boot/
+
 	# copy kernel
 	cp $(BASE)/boot/kernel.bin $(TMP_ISO)/boot/
 
@@ -98,8 +102,8 @@ $(TMP_FINAL)/image.iso: $(TMP_OBJ) $(BASE)/boot/kernel.bin $(BASE)/boot/limine/r
         $(TMP_ISO) -o $(TMP_FINAL)/image.iso
 
 	# clean
-	rm -rf $(TMP_ISO)
-	rm -rf $(TMP_OBJ)
+	#rm -rf $(TMP_ISO)
+	#rm -rf $(TMP_OBJ)
 
 run: $(TMP_FINAL)/image.iso
 	$(EMU) $(EMU_ARGS) -cdrom $<

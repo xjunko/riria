@@ -21,3 +21,6 @@ void devfs_zero_install(void);
 
 // /dev/stdout
 void devfs_stdout_install(void);
+
+// /dev/audio
+void devfs_audio_install(void);
