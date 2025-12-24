@@ -8,6 +8,8 @@ static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(4);
 // clang-format on
 
 void boot_verify(void) {
+  printf("[sys] %s-%s compiled with %s %s\n", OS_NAME, OS_CODENAME,
+         COMPILER_NAME, COMPILER_VERSION_STRING);
   printf("[sys] verifying bootloader... \n");
 
   if (LIMINE_BASE_REVISION_SUPPORTED(limine_base_revision) == false) {
