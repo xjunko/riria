@@ -20,8 +20,11 @@ this is a very poor attempt at making an operating system, you should take every
     - super basic, but it works now.
 - malloc and family
     - we have kmalloc and kfree, good enough.
-- vfs + devfs
-    - /dev/stdout and /dev/zero, good enough.
+- vfs
+    - devfs, tarfs
+    - /dev/, /init/
+- PCI
+    - ac97 audio driver which somewhat works
 
 ### things that doesnt work:
 - elf exec
