@@ -34,5 +34,25 @@ typedef int64_t ssize_t;
 
 #define UNREACHABLE() ASSERT(0)
 
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
+#if defined(__clang__)
+#define COMPILER_NAME "Clang"
+#define COMPILER_VERSION_STRING \
+  STR(__clang_major__) "." STR(__clang_minor__) "." STR(__clang_patchlevel__)
+#elif defined(__GNUC__)
+#define COMPILER_NAME "GCC"
+#define COMPILER_VERSION_STRING \
+  STR(__GNUC__) "." STR(__GNUC_MINOR__) "." STR(__GNUC_PATCHLEVEL__)
+#else
+#define COMPILER_NAME "Unknown"
+#define COMPILER_VERSION_STRING "0.0.0"
+#endif
+
+#define OS_NAME "riria"
+#define OS_CODENAME "aina"
+#define OS_VERSION "0.0.1a"
+
 void kprintf(const char*, ...);
-void panic(const char*);
+__attribute__((noreturn)) void panic(const char*);
