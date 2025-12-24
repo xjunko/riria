@@ -10,7 +10,7 @@ STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 EMU       = qemu-system-x86_64
 EMU_ARGS  = -smp 1 -m 512M -vga virtio
 EMU_ARGS += -serial stdio -no-reboot -no-shutdown \
-            -audio driver=sdl,model=ac97,id=0 -enable-kvm
+            -audio driver=sdl,model=ac97,id=0 
 
 TMP_OBJ = /tmp/riria-obj
 TMP_ISO = /tmp/riria-iso
@@ -19,7 +19,7 @@ TMP_FINAL = /tmp/riria-final
 BASE = ./base
 
 # compiler setup
-override KERNEL_CFLAGS  = -Wall -Wextra -Werror -ffreestanding -O0
+override KERNEL_CFLAGS  = -Wall -Wextra -Werror -ffreestanding -O3
 override KERNEL_CFLAGS += -fno-stack-protector -fno-stack-check -fno-lto  \
                           -fno-PIC -ffunction-sections -m64 -march=x86-64  \
 						  -mabi=sysv -mno-80387 -mno-mmx -mno-sse -mno-sse2 \

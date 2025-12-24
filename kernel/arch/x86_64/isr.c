@@ -54,7 +54,6 @@ void isr_install(void) {
   ISR_SET(29);
   ISR_SET(30);
   ISR_SET(31);
-  ISR_SET(128);
 
   // syscall handler
   idt_set_gate(0x80, _isr128, 0x08, 0xEE);

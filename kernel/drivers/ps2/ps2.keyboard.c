@@ -17,12 +17,14 @@ static int keyboard_handler(struct regs* r) {
 
   printf("[ps2] keyboard handler called \n");
 
-  unsigned char scancode;
+  unsigned char scancode = 0;
   if (inb(KB_PENDING) & 0x1) {
     scancode = inb(KB_DEVICE);
   }
 
-  printf("[ps2] scancode: 0x%x\n", scancode);
+  if (scancode) {
+    printf("[ps2] scancode: 0x%x\n", scancode);
+  }
 
   irq_ack(KB_IRQ);
 
