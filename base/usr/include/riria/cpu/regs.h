@@ -1,5 +1,6 @@
 #pragma once
 #include <riria/types.h>
+#include <stddef.h>
 
 typedef struct regs {
   uint64_t rflags;
@@ -23,6 +24,14 @@ typedef struct regs {
 
   uint64_t int_no;
   uint64_t err_code;
+
+  uint64_t rip;
+  uint64_t cs;
+  uint64_t rsp;
+  uint64_t ss;
 } regs_t;
+
+_Static_assert(offsetof(regs_t, rax) == 15 * 8, "regs_t layout broken");
+_Static_assert(sizeof(regs_t) % 8 == 0, "regs_t misaligned");
 
 void print_regs(regs_t* r);
