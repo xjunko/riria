@@ -69,6 +69,11 @@ void isr_install(void) {
 
 void isr_handler(regs_t* r) {
   printf("[isr] interrupt received: 0x%x (%d)\n", r->int_no, r->int_no);
+#ifdef DEBUG
+  print_regs(r);
+  printf("[isr] rip: 0x%lx cs: 0x%lx rsp: 0x%lx ss: 0x%lx\n", r->rip, r->cs,
+         r->rsp, r->ss);
+#endif
 
   isr_callback handler = isr_callbacks[r->int_no];
   if (handler) {
