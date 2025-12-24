@@ -5,8 +5,8 @@
 #define VFS_MAX_FILE_DESCRIPTORS 256
 #define VFS_FD_OFFSET 10
 
-typedef size_t (*fs_read)(const char* path, void* buffer, size_t sz);
-typedef size_t (*fs_write)(const char* path, const void* buffer, size_t sz);
+typedef ssize_t (*fs_read)(const char* path, void* buffer, size_t sz);
+typedef ssize_t (*fs_write)(const char* path, const void* buffer, size_t sz);
 typedef bool (*fs_exists)(const char* path);
 
 // what we expect from any fs implementation

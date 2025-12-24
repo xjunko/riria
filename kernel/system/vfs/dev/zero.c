@@ -3,13 +3,13 @@
 #include <riria/types.h>
 #include <string.h>
 
-size_t _zero_read(const char* path, void* buffer, size_t sz) {
+ssize_t _zero_read(const char* path, void* buffer, size_t sz) {
   UNUSED(path);
   memset(buffer, 0, sz);
   return sz;
 }
 
-size_t _zero_write(const char* path, const void* buffer, size_t sz) {
+ssize_t _zero_write(const char* path, const void* buffer, size_t sz) {
   UNUSED(path);
   UNUSED(buffer);
   return sz;

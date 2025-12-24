@@ -11,8 +11,8 @@ typedef struct devfs_dev {
 } devfs_dev_t;
 
 void devfs_init(vfs_impl_t*);
-size_t devfs_read(const char*, void*, size_t);
-size_t devfs_write(const char*, const void*, size_t);
+ssize_t devfs_read(const char*, void*, size_t);
+ssize_t devfs_write(const char*, const void*, size_t);
 bool devfs_exists(const char*);
 void devfs_register_dev(const char*, fs_read, fs_write);
 

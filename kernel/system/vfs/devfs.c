@@ -19,7 +19,7 @@ static devfs_dev_t* _devfs_find_dev(const char* path) {
   return NULL;
 }
 
-size_t devfs_read(const char* path, void* buffer, size_t sz) {
+ssize_t devfs_read(const char* path, void* buffer, size_t sz) {
   if (!path) return -1;
   if (!buffer) return -2;
 
@@ -31,7 +31,7 @@ size_t devfs_read(const char* path, void* buffer, size_t sz) {
   return bytes_read;
 }
 
-size_t devfs_write(const char* path, const void* buffer, size_t sz) {
+ssize_t devfs_write(const char* path, const void* buffer, size_t sz) {
   if (!path) return -1;
   if (!buffer) return -2;
 
