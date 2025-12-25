@@ -20,6 +20,12 @@ void isr_install_handler(size_t isr, isr_callback callback) {
 
 void isr_uninstall_handler(size_t isr) { isr_callbacks[isr] = 0; }
 
+static void _gpf_fault_handler(regs_t* r) {
+  printf("[isr] general protection fault at 0x%lx\n", r->rip);
+  print_regs(r);
+  panic("general protection fault");
+}
+
 void isr_install(void) {
   // should work now
   ISR_SET(0);
@@ -59,7 +65,9 @@ void isr_install(void) {
   idt_set_gate(0x80, _isr128, 0x08, 0xEE);
   isr_install_handler(0x80, syscall_handler);
 
-  // // FIXME: optimally i would enable all but for now just set the ones i need
+  idt_set_gate(13, _isr13, 0x08, 0x8E);  // general protection fault
+  isr_install_handler(13, _gpf_fault_handler);
+
   idt_set_gate(14, _isr14, 0x08, 0x8E);  // page fault
 
   for (int i = 0; i <= ISR_COUNT; i++) {
@@ -68,6 +76,10 @@ void isr_install(void) {
 }
 
 void isr_handler(regs_t* r) {
+  if (r->cs & 0x3) {
+    asm volatile("swapgs");
+  }
+
   printf("[isr] interrupt received: 0x%x (%d)\n", r->int_no, r->int_no);
 #ifdef DEBUG
   print_regs(r);
@@ -80,5 +92,9 @@ void isr_handler(regs_t* r) {
     handler(r);
   } else {
     printf("[isr] unhandled interrupt: %d\n", r->int_no);
+  }
+
+  if (r->cs & 0x3) {
+    asm volatile("swapgs");
   }
 }
