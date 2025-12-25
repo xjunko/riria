@@ -120,12 +120,12 @@ int vfs_close(vfs_file_t* file) {
 
 void vfs_install(void) {
   printf("[vfs] VFS INIT...");
-  vfs_impl_t* devfs = malloc(sizeof(vfs_file_t));
+  vfs_impl_t* devfs = malloc(sizeof(vfs_impl_t));
   mountpoints[0].mnt = "/dev/";
   mountpoints[0].impl = devfs;
   devfs_init(devfs);
 
-  vfs_impl_t* tarfs = malloc(sizeof(vfs_file_t));
+  vfs_impl_t* tarfs = malloc(sizeof(vfs_impl_t));
   mountpoints[1].mnt = "/init/";
   mountpoints[1].impl = tarfs;
   tarfs_init(tarfs);
