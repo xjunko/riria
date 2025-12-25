@@ -14,10 +14,7 @@ bool should_schedule = false;
 
 #define PUSH_STACK(stack, value) *--stack = value;
 
-void _null(void) {
-  for (;;)
-    ;
-}
+void _null(void) { HALT(); }
 
 void process_create(process_entry_t entry, pagemap_t* pagemap) {
   printf("[prc] new process (entry=%p) (pagemap=%p)\n", entry, pagemap);
@@ -78,15 +75,41 @@ void process_create(process_entry_t entry, pagemap_t* pagemap) {
   should_schedule = true;
 }
 
+// clang-format off
+__attribute__((noreturn))
+// used like: process_spawn_user(buf, sz, USER_VIRT_START);
+void process_spawn_user(const uint8_t* code, size_t len, uint64_t entry_addr) {
+  // clang-format on
+  UNUSED(len);
+  uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
+  uintptr_t virt_start = entry_addr;
+  size_t mem_required = len;
+  uintptr_t virt_end =
+      (entry_addr + PAGE_SIZE + mem_required - 1) & ~(PAGE_SIZE - 1);
+
+  for (size_t i = virt_start; i < virt_end; i += PAGE_SIZE) {
+    uintptr_t page = (uintptr_t)pmm_allocate();
+    vmm_map_page(process_get_current()->pagemap, i, page, flags);
+  }
+
+  uintptr_t stack_top = USER_STACK_BASE;
+  for (uintptr_t i = stack_top - PAGE_SIZE; i < stack_top; i += PAGE_SIZE) {
+    uintptr_t page = (uintptr_t)pmm_allocate();
+    vmm_map_page(process_get_current()->pagemap, i, page, flags);
+  }
+
+  memcpy((void*)entry_addr, code, len);
+
+  asm volatile("swapgs");
+  switch_to_user();
+}
+
 int process_schedule(regs_t* r) {
   UNUSED(r);
   irq_ack(0);
   int_disable();
 
-  if (!should_schedule || !process_head || !process_head->next) {
-    int_resume();
-    return 0;
-  }
+  if (!should_schedule || !process_head || !process_head->next) goto cleanup;
 
   process_t* prev_proc = process_head->process;
   ASSERT(prev_proc);
@@ -94,6 +117,9 @@ int process_schedule(regs_t* r) {
   ASSERT(process_head);
   process_t* curr_proc = process_head->process;
   ASSERT(curr_proc);
+
+  // o.O
+  if (curr_proc->id == prev_proc->id) goto cleanup;
 
   ASSERT(curr_proc->pagemap);
   vmm_switch_pagemap(curr_proc->pagemap);
@@ -106,6 +132,8 @@ int process_schedule(regs_t* r) {
   ASSERT(&curr_proc->krsp);
   process_switch(&prev_proc->krsp, &curr_proc->krsp);
 
+cleanup:
+  int_resume();
   return 0;
 }
 

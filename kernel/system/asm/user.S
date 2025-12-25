@@ -1,5 +1,7 @@
+.section .text
+.align 4
 
-.equ USER_STACK_TOP, 0x0000000080000000
+.equ USER_STACK_TOP, 0x80000000
 
 .global switch_to_user
 .type switch_to_user, @function

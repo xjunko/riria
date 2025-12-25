@@ -73,8 +73,7 @@ void isr_install(void) {
 
 void isr_handler(regs_t* r) {
   if (r->cs & 0x3) {
-    // should never happen, at least for now
-    UNREACHABLE();
+    asm volatile("swapgs");
   }
 
   printf("[isr] interrupt received: 0x%x (%d)\n", r->int_no, r->int_no);

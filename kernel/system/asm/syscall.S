@@ -1,3 +1,6 @@
+.section .text
+.align 4
+
 .extern syscall_handler
 .type syscall_handler, @function
 

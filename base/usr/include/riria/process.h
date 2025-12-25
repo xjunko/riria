@@ -3,6 +3,10 @@
 #include <riria/mem.h>
 #include <riria/types.h>
 
+#define STACK_SIZE 0x10000
+#define USER_VIRT_START 0x10000
+#define USER_STACK_BASE 0x80000000
+
 typedef struct process {
   uint32_t id;
 
@@ -20,13 +24,13 @@ typedef struct process_node {
   struct process_node* next;
 } process_node_t;
 
-#define STACK_SIZE 0x10000
-
 typedef void (*process_entry_t)(void);
 
 void process_create(process_entry_t, pagemap_t*);
+__attribute__((noreturn)) void process_spawn_user(const uint8_t*, size_t,
+                                                  uint64_t);
 int process_schedule(regs_t* r);
 process_t* process_get_current(void);
 
 extern void process_switch(uint64_t*, uint64_t*);
-extern void switch_to_user(void);
+__attribute__((noreturn)) extern void switch_to_user(void);

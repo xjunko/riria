@@ -1,3 +1,4 @@
+#include <riria/types.h>
 #include <stdio.h>
 
 void* memcpy(void* restrict dest, const void* restrict src, size_t n) {
