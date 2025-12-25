@@ -2,7 +2,8 @@
 
 currently the kernel boots up and prints some stuff, not that interesting.
 
-<img width="1041" height="836" alt="image" src="https://github.com/user-attachments/assets/3248f3d7-e82a-4026-9376-e4046df91c97" />
+<img width="1074" height="867" alt="image" src="https://github.com/user-attachments/assets/5a615f54-d255-4860-8d31-07c100d3969d" />
+
 
 
 ### what this is
