@@ -1,3 +1,4 @@
+#include <riria/elf.h>
 #include <riria/fs/devfs.h>
 #include <riria/process.h>
 #include <riria/types.h>
@@ -8,6 +9,41 @@
 int starts_with(const char* str, const char* prefix) {
   size_t len_prefix = strlen(prefix);
   return strncmp(str, prefix, len_prefix) == 0;
+}
+
+void _test_elf(void) {
+  vfs_file_t* elf_file = vfs_open("/init/test.elf", 0, 0);
+  if (!elf_file) {
+    printf("failed: open \n");
+    return;
+  }
+
+  vfs_file_stat_t stat;
+  int res = vfs_stat(elf_file, &stat);
+  if (res < 0) {
+    printf("failed: stat");
+    return;
+  }
+
+  void* buf = malloc(stat.size);
+  if (!buf) {
+    printf("failed: malloc");
+    return;
+  }
+
+  int bytes_read = vfs_read(elf_file, buf, stat.size);
+  if (bytes_read < 0) {
+    printf("failed: read \n");
+    return;
+  }
+
+  process_spawn_elf(buf, stat.size);
+
+  int ret = vfs_close(elf_file);
+  if (ret < 0) {
+    printf("failed: close \n");
+    return;
+  }
 }
 
 void _test_bin(void) {
@@ -106,6 +142,11 @@ void exec(const char* arg) {
   if (strcmp(arg, "test") == 0) {
     pagemap_t* user_pagemap = vmm_new_pagemap();
     process_create(_test_bin, user_pagemap);
+  }
+
+  if (strcmp(arg, "elf") == 0) {
+    pagemap_t* user_pagemap = vmm_new_pagemap();
+    process_create(_test_elf, user_pagemap);
   }
 }
 

@@ -2,6 +2,7 @@
 #include <riria/cpu/msr.h>
 #include <riria/cpu/regs.h>
 #include <riria/cpu/tss.h>
+#include <riria/elf.h>
 #include <riria/mem.h>
 #include <riria/process.h>
 #include <riria/types.h>
@@ -78,8 +79,8 @@ void process_create(process_entry_t entry, pagemap_t* pagemap) {
 // clang-format off
 __attribute__((noreturn))
 // used like: process_spawn_user(buf, sz, USER_VIRT_START);
+// clang-format on
 void process_spawn_user(const uint8_t* code, size_t len, uint64_t entry_addr) {
-  // clang-format on
   UNUSED(len);
   uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
   uintptr_t virt_start = entry_addr;
@@ -99,6 +100,23 @@ void process_spawn_user(const uint8_t* code, size_t len, uint64_t entry_addr) {
   }
 
   memcpy((void*)entry_addr, code, len);
+
+  asm volatile("swapgs");
+  switch_to_user();
+}
+
+// clang-format off
+__attribute__((noreturn))
+// clang-format on
+void process_spawn_elf(uint8_t* elf_data, size_t len) {
+  uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
+  uint64_t entry_addr = elf64_load(elf_data, len);
+
+  uintptr_t stack_top = USER_STACK_BASE;
+  for (uintptr_t i = stack_top - PAGE_SIZE; i < stack_top; i += PAGE_SIZE) {
+    uintptr_t page = (uintptr_t)pmm_allocate();
+    vmm_map_page(process_get_current()->pagemap, i, page, flags);
+  }
 
   asm volatile("swapgs");
   switch_to_user();

@@ -27,10 +27,12 @@ typedef struct process_node {
 typedef void (*process_entry_t)(void);
 
 void process_create(process_entry_t, pagemap_t*);
-__attribute__((noreturn)) void process_spawn_user(const uint8_t*, size_t,
-                                                  uint64_t);
 int process_schedule(regs_t* r);
 process_t* process_get_current(void);
+
+__attribute__((noreturn)) void process_spawn_user(const uint8_t*, size_t,
+                                                  uint64_t);
+__attribute__((noreturn)) void process_spawn_elf(uint8_t*, size_t);
 
 extern void process_switch(uint64_t*, uint64_t*);
 __attribute__((noreturn)) extern void switch_to_user(void);
