@@ -12,7 +12,7 @@ this is a very poor attempt at making an operating system, you should take every
 - gdt/idt/irq/isr 
     - tss is hacky, but its fine for now.
 - syscall 
-    - currently only write(4) which writes to stdout to get the ball rolling
+    - exit(1), write(4) - its barebones right now.
 - pmm + vmm + paging
     - super basic, but it works now.
 - malloc and family
