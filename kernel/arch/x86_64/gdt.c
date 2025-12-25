@@ -43,8 +43,8 @@ void gdt_install(void) {
   gdt_set_gate(0, 0, 0, 0, 0);        // 0x0 - null
   gdt_set_gate(1, 0, 0, 0x9A, 0x20);  // 0x8 - code segment
   gdt_set_gate(2, 0, 0, 0x92, 0x0);   // 0x10 - data segment
-  gdt_set_gate(3, 0, 0, 0xF2, 0x0);   // 0x18 - user code segment
-  gdt_set_gate(4, 0, 0, 0xFA, 0x20);  // 0x20 - user data segment
+  gdt_set_gate(3, 0, 0, 0xFA, 0x20);  // 0x18 - user code segment
+  gdt_set_gate(4, 0, 0, 0xF2, 0x0);   // 0x20 - user data segment
   write_tss(5);                       // 0x28 - TSS segment (1)
 
   printf("[cpu] GDT=0x%x\n", gdtp->base);
