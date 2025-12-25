@@ -87,6 +87,7 @@ int ac97_write_buffer(uint8_t* buf, size_t sz) {
   }
 
   if (buffer_left == 0) {
+    panic("no buffers left!");
     return 0;
   }
 
