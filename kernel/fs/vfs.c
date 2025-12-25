@@ -98,6 +98,17 @@ int vfs_seek(vfs_file_t* file, size_t offset, int whence) {
   return file->fs->impl->seek(loc_wo_mnt, offset, whence);
 }
 
+int vfs_stat(vfs_file_t* file, vfs_file_stat_t* stat) {
+  if (!file) return -1;
+  if (!file->loc) return -2;
+  if (!file->fs) return -3;
+  if (!file->fs->impl) return -4;
+  if (!file->fs->impl->stat) return 0;
+
+  const char* loc_wo_mnt = file->loc + strlen(file->fs->mnt) - 1;
+  return file->fs->impl->stat(loc_wo_mnt, stat);
+}
+
 int vfs_exists(vfs_file_t* file) {
   if (!file) return -1;
   if (!file->loc) return -2;

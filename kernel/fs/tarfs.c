@@ -11,7 +11,7 @@ void* initramfs;
 tarfs_file_t* tarfs_head = NULL;
 tarfs_file_t* tarfs_tail = NULL;
 
-static void _tarfs_add_file(const char* loc) {
+static void _tarfs_add_file(const char* loc, size_t sz) {
   tarfs_file_t* file = malloc(sizeof(tarfs_file_t));
   ASSERT(file);
 
@@ -23,6 +23,7 @@ static void _tarfs_add_file(const char* loc) {
   file->write = NULL;
   file->seek = tarfs_seek;
   file->next = NULL;
+  file->len = sz;
 
   if (!tarfs_head) {
     tarfs_head = file;
@@ -110,6 +111,18 @@ ssize_t tarfs_seek(const char* path, size_t offset, int whence) {
   return file->seek_pos;
 }
 
+ssize_t tarfs_stat(const char* path, vfs_file_stat_t* stat) {
+  if (!path) return -1;
+  if (!stat) return -2;
+
+  tarfs_file_t* file = _tarfs_find_file(path);
+  if (!file) return -1;
+
+  stat->type = 0;  // regular file
+  stat->size = file->len;
+  return 0;
+}
+
 bool tarfs_exists(const char* path) {
   if (!path) return 0;
 
@@ -123,6 +136,7 @@ void tarfs_init(vfs_impl_t* impl) {
   impl->write = NULL;
   impl->exists = tarfs_exists;
   impl->seek = tarfs_seek;
+  impl->stat = tarfs_stat;
 
   for (uint64_t i = 0; i < module_request.response->module_count; i++) {
     if (strcmp(module_request.response->modules[i]->path,
@@ -142,7 +156,7 @@ void tarfs_init(vfs_impl_t* impl) {
     char* path = (char*)ptr;
 
     if (file_size > 0) {
-      _tarfs_add_file(path);
+      _tarfs_add_file(path, file_size);
     }
 
     ptr += (((file_size + 511) / 512) + 1) * 512;

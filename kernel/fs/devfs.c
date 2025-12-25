@@ -79,6 +79,8 @@ void devfs_init(vfs_impl_t* impl) {
   impl->read = devfs_read;
   impl->write = devfs_write;
   impl->exists = devfs_exists;
+  impl->seek = NULL;
+  impl->stat = NULL;
 
   devfs_zero_install();
   devfs_stdout_install();
