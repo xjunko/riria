@@ -15,7 +15,10 @@ bool should_schedule = false;
 
 #define PUSH_STACK(stack, value) *--stack = value;
 
-void _null(void) { HALT(); }
+void _null(void) {
+  process_get_current()->state = PROCESS_DEAD;
+  HALT();
+}
 
 void process_create(process_entry_t entry, pagemap_t* pagemap) {
   printf("[prc] new process (entry=%p) (pagemap=%p)\n", entry, pagemap);
@@ -94,7 +97,9 @@ void process_spawn_user(const uint8_t* code, size_t len, uint64_t entry_addr) {
   }
 
   uintptr_t stack_top = USER_STACK_BASE;
-  for (uintptr_t i = stack_top - PAGE_SIZE; i < stack_top; i += PAGE_SIZE) {
+  uintptr_t stack_base = stack_top - STACK_SIZE;
+
+  for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
     uintptr_t page = (uintptr_t)pmm_allocate();
     vmm_map_page(process_get_current()->pagemap, i, page, flags);
   }
@@ -113,7 +118,9 @@ void process_spawn_elf(uint8_t* elf_data, size_t len) {
   uint64_t entry_addr = elf64_load(elf_data, len);
 
   uintptr_t stack_top = USER_STACK_BASE;
-  for (uintptr_t i = stack_top - PAGE_SIZE; i < stack_top; i += PAGE_SIZE) {
+  uintptr_t stack_base = stack_top - STACK_SIZE;
+
+  for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
     uintptr_t page = (uintptr_t)pmm_allocate();
     vmm_map_page(process_get_current()->pagemap, i, page, flags);
   }
@@ -122,12 +129,45 @@ void process_spawn_elf(uint8_t* elf_data, size_t len) {
   switch_to_user();
 }
 
+void process_reap(void) {
+  process_node_t* prev = process_head;
+  process_node_t* curr = process_head->next;
+
+  do {
+    process_t* proc = curr->process;
+    if (proc->state == PROCESS_DEAD) {
+      printf("[prc] reaping process %u\n", proc->id);
+
+      if (curr == prev) {
+        process_head = NULL;
+      } else {
+        prev->next = curr->next;
+        if (process_head == curr) {
+          process_head = prev;
+        }
+      }
+
+      free(proc->stack);
+      free(proc);
+      free(curr);
+
+      curr = prev->next;
+    } else {
+      prev = curr;
+      curr = curr->next;
+    }
+  } while (curr != process_head && process_head != NULL);
+}
+
+// accepts regs_t but dont need it.
 int process_schedule(regs_t* r) {
   UNUSED(r);
+
   irq_ack(0);
   int_disable();
 
   if (!should_schedule || !process_head || !process_head->next) goto cleanup;
+  process_reap();
 
   process_t* prev_proc = process_head->process;
   ASSERT(prev_proc);
@@ -153,6 +193,12 @@ int process_schedule(regs_t* r) {
 cleanup:
   int_resume();
   return 0;
+}
+
+void process_exit(int code) {
+  UNUSED(code);
+  process_get_current()->state = PROCESS_DEAD;
+  process_schedule(NULL);
 }
 
 process_t* process_get_current(void) {
