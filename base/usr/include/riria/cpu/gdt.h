@@ -6,7 +6,8 @@ typedef struct gdt_entry {
   uint16_t base_low;
   uint8_t base_middle;
   uint8_t access;
-  uint8_t granularity;  // low 4 bits: limit_high, high 4 bits: flags
+  uint8_t limit_high : 4;  // low 4 bits: limit_high, high 4 bits: flags
+  uint8_t granularity : 4;
   uint8_t base_high;
 } __attribute__((packed)) gdt_entry_t;
 

@@ -5,13 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-__attribute__((aligned(16))) uint8_t kernel_stack[16384];
-__attribute__((aligned(16))) uint8_t user_stack[65536];
-__attribute__((aligned(16))) uint8_t df_stack[65536];
-__attribute__((aligned(16))) uint8_t nmi_stack[65536];
+__attribute__((aligned(16))) uint8_t kernel_stack[4096];
+__attribute__((aligned(16))) uint8_t df_stack[4096];
+__attribute__((aligned(16))) uint8_t nmi_stack[4096];
 
 static struct {
-  gdt_entry_t entries[7];
+  gdt_entry_t entries[9];
   gdt_ptr_t ptr;
   tss_entry_t tss;
 } gdt __attribute__((used));
@@ -22,17 +21,12 @@ static tss_entry_t tss __attribute__((used, aligned(16)));
 
 void gdt_set_gate(uint8_t idx, uint64_t base, uint64_t limit, uint8_t access,
                   uint8_t granularity) {
-  // in 64bit, base and limit value are ignored.
-  ENTRY(idx).base_low = (base & 0xFFFF);
-  ENTRY(idx).base_middle = (base >> 16) & 0xFF;
-  ENTRY(idx).base_high = (base >> 24) & 0xFF;
+  UNUSED(base);
+  UNUSED(limit);
 
-  ENTRY(idx).limit_low = (limit & 0xFFFF);
-  ENTRY(idx).granularity = (limit >> 16) & 0x0F;
-
-  ENTRY(idx).granularity |= (granularity & 0xF0);
-
+  memset(&ENTRY(idx), 0, sizeof(gdt_entry_t));
   ENTRY(idx).access = access;
+  ENTRY(idx).granularity = granularity;
 }
 
 void gdt_install(void) {
@@ -40,12 +34,13 @@ void gdt_install(void) {
   gdtp->limit = sizeof(gdt.entries) - 1;
   gdtp->base = (uintptr_t)&ENTRY(0);
 
-  gdt_set_gate(0, 0, 0, 0, 0);        // 0x0 - null
-  gdt_set_gate(1, 0, 0, 0x9A, 0x20);  // 0x8 - code segment
-  gdt_set_gate(2, 0, 0, 0x92, 0x0);   // 0x10 - data segment
-  gdt_set_gate(3, 0, 0, 0xFA, 0x20);  // 0x18 - user code segment
-  gdt_set_gate(4, 0, 0, 0xF2, 0x0);   // 0x20 - user data segment
-  write_tss(5);                       // 0x28 - TSS segment (1)
+  gdt_set_gate(0, 0, 0, 0, 0);       // 0x0 - null
+  gdt_set_gate(1, 0, 0, 0x9A, 0xA);  // 0x8 - code segment
+  gdt_set_gate(2, 0, 0, 0x92, 0xC);  // 0x10 - data segment
+  gdt_set_gate(3, 0, 0, 0xFA, 0xC);  // 0x18 - user code segment
+  gdt_set_gate(4, 0, 0, 0xF2, 0xC);  // 0x20 - user data segment
+  gdt_set_gate(5, 0, 0, 0xFA, 0xA);  // 0x28 - user data segment
+  write_tss(6);                      // 0x30 - TSS segment (1)
 
   printf("[cpu] GDT=0x%x\n", gdtp->base);
   printf("[cpu] TSS=0x%x\n", (uintptr_t)&gdt.tss);
@@ -69,8 +64,8 @@ void write_tss(uint32_t num) {
   ENTRY(num).base_high = (base >> 24) & 0xFF;
 
   ENTRY(num).limit_low = limit;
-  ENTRY(num).granularity = (limit >> 16) & 0x0F;
-
+  ENTRY(num).limit_high = (limit >> 16) & 0x0F;
+  ENTRY(num).granularity = 0;
   ENTRY(num).access = 0x89;
 
   // HACK: bit cursed but it does the job for now

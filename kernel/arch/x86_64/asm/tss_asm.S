@@ -5,6 +5,6 @@
 .type tss_flush, @function
 
 tss_flush:
-    mov $0x28, %ax
+    mov $0x30, %ax
     ltr %ax
     ret
