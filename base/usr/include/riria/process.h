@@ -29,3 +29,4 @@ int process_schedule(regs_t* r);
 process_t* process_get_current(void);
 
 extern void process_switch(uint64_t*, uint64_t*);
+extern void switch_to_user(void);
