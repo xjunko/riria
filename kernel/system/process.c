@@ -14,7 +14,10 @@ bool should_schedule = false;
 
 #define PUSH_STACK(stack, value) *--stack = value;
 
-void _null(void) { for (;;); }
+void _null(void) {
+  for (;;)
+    ;
+}
 
 void process_create(process_entry_t entry, pagemap_t* pagemap) {
   printf("[prc] new process (entry=%p) (pagemap=%p)\n", entry, pagemap);

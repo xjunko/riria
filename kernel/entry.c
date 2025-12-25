@@ -12,10 +12,83 @@
 #include <riria/drivers/serial.h>
 #include <riria/fs/vfs.h>
 #include <riria/mem.h>
+#include <riria/process.h>
+#include <riria/syscall.h>
 #include <riria/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+extern void switch_to_user(void);
+
+void _userspace_thread(void) {
+  uintptr_t start_virt = 0x10000;
+  size_t page_size = PAGE_SIZE;
+  size_t needed_mem = 1 * 1024 * 1024;
+
+  for (size_t i = start_virt; i < start_virt + needed_mem; i += PAGE_SIZE) {
+    uintptr_t page = (uintptr_t)pmm_allocate();
+    vmm_map_page(process_get_current()->pagemap, i, page,
+                 PTE_PRESENT | PTE_USER | PTE_WRITABLE);
+  }
+
+  uintptr_t stack_top = 0x80000000;
+  size_t stack_size = PAGE_SIZE;
+
+  for (uintptr_t i = stack_top - stack_size; i < stack_top; i += PAGE_SIZE) {
+    uintptr_t pa = (uintptr_t)pmm_allocate();
+    vmm_map_page(process_get_current()->pagemap, i, pa,
+                 PTE_PRESENT | PTE_USER | PTE_WRITABLE);
+  }
+
+  vfs_file_t* elf_file = vfs_open("/init/test.bin", 0, 0);
+  ASSERT(elf_file);
+  size_t elf_size = vfs_read(elf_file, (void*)0x10000, needed_mem);
+
+  asm volatile("swapgs");
+  switch_to_user();
+}
+
+void _thread_test1(void) {
+  // test audio driver
+  ac97_set_volume(50);
+  vfs_file_t* audio_fs = vfs_open("/init/human_48k_stereo.pcm", 0, 0);
+  ASSERT(audio_fs);
+
+  vfs_file_t* ac97_fs = vfs_open("/dev/audio", 0, 0);
+  ASSERT(ac97_fs);
+
+  size_t chunk_size = 128000;
+  void* buffer = malloc(chunk_size);
+  int pcm_pos = 0;
+
+  for (;;) {
+    while (!ac97_can_write())
+      ;
+    vfs_seek(audio_fs, pcm_pos, 0);
+    int bytes_read = vfs_read(audio_fs, buffer, chunk_size);
+    ASSERT(bytes_read >= 0);
+
+    if (bytes_read == 0) break;
+
+    int total_written = 0;
+    while (total_written < bytes_read) {
+      int written = vfs_write(ac97_fs, (uint8_t*)buffer + total_written,
+                              bytes_read - total_written);
+
+      total_written += written;
+    }
+    pcm_pos += bytes_read;
+  }
+  int ret = vfs_close(audio_fs);
+  ASSERT(ret >= 0);
+}
+
+void _thread_test2(void) {
+  while (1) {
+    printf("hello from thread %d\n", process_get_current()->id);
+  }
+}
 
 void kmain(void) {
   serial_install();  // will be used for printk
@@ -39,6 +112,9 @@ void kmain(void) {
   ps2_keyboard_install();
   framebuffer_install();
   ac97_install();
+
+  // syscall
+  syscall_install();
 
   // kmalloc test
   void* phys;
@@ -88,47 +164,24 @@ void kmain(void) {
 
   // test syscall
   asm volatile("int $33");  // ack 1
-  asm volatile("int $0x80"
-               :
-               : "a"(4), "b"(1), "c"("hello, from syscall!\n"),
-                 "d"(22));  // syscall write(4) to serial(1)
 
-  // test audio driver
-  ac97_set_volume(50);
-  vfs_file_t* audio_fs = vfs_open("/init/human_48k_stereo.pcm", 0, 0);
-  ASSERT(audio_fs);
+  // thread testing
+  process_create(NULL, NULL);
+  process_create(_thread_test1, NULL);
+  process_create(_thread_test2, NULL);
 
-  size_t chunk_size = 128000;
-  int pcm_pos = 0;
-  buffer = malloc(chunk_size);
-  for (;;) {
-    while (!ac97_can_write())
-      ;
-    vfs_seek(audio_fs, pcm_pos, 0);
-    int bytes_read = vfs_read(audio_fs, buffer, chunk_size);
-    ASSERT(bytes_read >= 0);
-
-    if (bytes_read == 0) break;
-
-    int total_written = 0;
-    while (total_written < bytes_read) {
-      int written = ac97_write_pcm((uint8_t*)buffer + total_written,
-                                   bytes_read - total_written);
-      total_written += written;
-    }
-    pcm_pos += bytes_read;
-  }
-  ret = vfs_close(audio_fs);
-  ASSERT(ret >= 0);
+  // user process
+  pagemap_t* user_pagemap = vmm_new_pagemap();
+  process_create(_userspace_thread, user_pagemap);
 
   printf("[sys] halted.\n");
-  int i = 0;
+  uint32_t i = 0;
   while (1) {
     i++;
 
     // i call this, "minecraft"
-    for (int x = (i % 640) + 100; x < (i % 640) + 200; x++) {
-      for (int y = (i % 400) + 100; y < (i % 400) + 200; y++) {
+    for (uint32_t x = (i % 640) + 100; x < (i % 640) + 200; x++) {
+      for (uint32_t y = (i % 400) + 100; y < (i % 400) + 200; y++) {
         framebuffer_draw_pixel(x, y, (i << 16) | (i << 8) | i);
       }
     }

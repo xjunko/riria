@@ -42,6 +42,7 @@
 #include <riria/cpu/isr.h>
 #include <riria/cpu/regs.h>
 #include <riria/mem.h>
+#include <riria/process.h>
 #include <riria/types.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -345,6 +346,8 @@ void vmm_pagefault(regs_t* r) {
   uint64_t fault_addr;
   asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
 
+  printf("==================\n");
+  printf("[err] failed in process=%d\n", process_get_current()->id);
   printf("[err] page fault at address 0x%x\n", fault_addr);
   print_regs(r);
 
