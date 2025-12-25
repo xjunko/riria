@@ -61,10 +61,6 @@ void isr_install(void) {
   ISR_SET(30);
   ISR_SET(31);
 
-  // syscall handler
-  idt_set_gate(0x80, _isr128, 0x08, 0xEE);
-  isr_install_handler(0x80, syscall_handler);
-
   idt_set_gate(13, _isr13, 0x08, 0x8E);  // general protection fault
   isr_install_handler(13, _gpf_fault_handler);
 
@@ -77,7 +73,8 @@ void isr_install(void) {
 
 void isr_handler(regs_t* r) {
   if (r->cs & 0x3) {
-    asm volatile("swapgs");
+    // should never happen, at least for now
+    UNREACHABLE();
   }
 
   printf("[isr] interrupt received: 0x%x (%d)\n", r->int_no, r->int_no);
@@ -95,6 +92,7 @@ void isr_handler(regs_t* r) {
   }
 
   if (r->cs & 0x3) {
-    asm volatile("swapgs");
+    // should never happen, at least for now
+    UNREACHABLE();
   }
 }

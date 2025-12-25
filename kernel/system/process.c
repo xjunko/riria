@@ -1,4 +1,5 @@
 #include <riria/cpu/irq.h>
+#include <riria/cpu/msr.h>
 #include <riria/cpu/regs.h>
 #include <riria/cpu/tss.h>
 #include <riria/mem.h>
@@ -13,10 +14,7 @@ bool should_schedule = false;
 
 #define PUSH_STACK(stack, value) *--stack = value;
 
-void _null(void) {
-  for (;;)
-    ;
-}
+void _null(void) { for (;;); }
 
 void process_create(process_entry_t entry, pagemap_t* pagemap) {
   printf("[prc] new process (entry=%p) (pagemap=%p)\n", entry, pagemap);
@@ -61,6 +59,7 @@ void process_create(process_entry_t entry, pagemap_t* pagemap) {
   PUSH_STACK(stack, 0);
 
   new_process->krsp = (uint64_t)stack;
+  new_process->ursp = 0;
 
   process_node_t* new_node = malloc(sizeof(process_node_t));
   new_node->process = new_process;
@@ -98,6 +97,7 @@ int process_schedule(regs_t* r) {
 
   ASSERT(curr_proc->stack_top);
   tss_set_stack((uint64_t)curr_proc->stack_top);
+  wrmsr(MSR_USER_GS_BASE, (uint64_t)curr_proc);
 
   ASSERT(&prev_proc->krsp);
   ASSERT(&curr_proc->krsp);

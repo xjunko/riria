@@ -185,8 +185,8 @@ void irq_handler(regs_t* r) {
     irq_ack(r->int_no - 32);
   }
 done:
-  int_resume();
   if (r->cs & 0x3) {
     asm volatile("swapgs");
   }
+  int_resume();
 }

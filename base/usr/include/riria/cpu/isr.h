@@ -41,7 +41,6 @@ ISR(28);
 ISR(29);
 ISR(30);
 ISR(31);
-ISR(128);
 
 void isr_install(void);
 void isr_install_handler(size_t, isr_callback);

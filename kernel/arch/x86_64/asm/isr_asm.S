@@ -51,7 +51,6 @@ ISR_NOERR 28
 ISR_NOERR 29
 ISR_NOERR 30
 ISR_NOERR 31
-ISR_NOERR 128
 
 .extern isr_handler
 .type isr_handler, @function
