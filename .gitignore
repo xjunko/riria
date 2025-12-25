@@ -2,7 +2,8 @@
 userspace/*
 kernel/misc/elf_test.c
 
-# lib
+# lib & others
+*.bak
 *.a
 
 # bootloader
