@@ -10,6 +10,8 @@ syscall_trap:
     swapgs
     cli 
 
+    # these points to process_t.ursp and process_t.krsp
+    # changes done to the struct will require changes here as well
     mov %rsp, %gs:32
     mov %gs:24, %rsp
 
