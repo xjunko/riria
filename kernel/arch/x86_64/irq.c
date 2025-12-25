@@ -1,6 +1,7 @@
 #include <riria/cpu/idt.h>
 #include <riria/cpu/io.h>
 #include <riria/cpu/irq.h>
+#include <riria/process.h>
 #include <riria/types.h>
 #include <stdio.h>
 
@@ -140,6 +141,9 @@ void irq_install(void) {
   IRQ_SET(14);
   IRQ_SET(15);
   irq_setup_gates();
+
+  // pit - used for scheduling
+  irq_install_handler(0, process_schedule, "process scheduling");
   printf(" OK!\n");
 }
 
@@ -159,10 +163,15 @@ void print_regs(regs_t* r) {
          r->r11);
   printf("[irq] r12=0x%x r13=0x%x r14=0x%x r15=0x%x\n", r->r12, r->r13, r->r14,
          r->r15);
-  printf("[irq] rflags=0x%x\n ", r->rflags);
+  printf("[irq] rflags=0x%x cs=0x%x rsp=0x%x ss=0x%x rip=0x%x\n", r->rflags,
+         r->cs, r->rsp, r->ss, r->rip);
 }
 
 void irq_handler(regs_t* r) {
+  if (r->cs & 0x3) {
+    asm volatile("swapgs");
+  }
+
   int_disable();
   if (r->int_no <= 47 && r->int_no >= 32) {
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
@@ -177,4 +186,7 @@ void irq_handler(regs_t* r) {
   }
 done:
   int_resume();
+  if (r->cs & 0x3) {
+    asm volatile("swapgs");
+  }
 }
