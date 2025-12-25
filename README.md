@@ -1,10 +1,6 @@
 ## riria-kernel-x64
 
-currently the kernel boots up and prints some stuff, not that interesting.
-
 <img width="1074" height="867" alt="image" src="https://github.com/user-attachments/assets/5a615f54-d255-4860-8d31-07c100d3969d" />
-
-
 
 ### what this is
 this is a very poor attempt at making an operating system, you should take everything that i did here as a what not to do.
@@ -30,9 +26,10 @@ this is a very poor attempt at making an operating system, you should take every
     - ELF works, though, it's a bit janky atm with the userspace linker setup.
     - userspace is okayish now
 - scheduling
-    - stupidly basic round robin scheduler, it does the job.
+    - super basic singly linked list round robin scheduling, good enough.
 - kernel shell
     - it can play music and run the test executable
+
 
 ### things that doesnt work:
 - proper libc
