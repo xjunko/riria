@@ -133,6 +133,8 @@ void _mus_play_proc(void) {
   printf("exit: done playing music\n");
 }
 
+void _run_quickly_then_die(void) { printf("hello world\n"); }
+
 void exec(const char* arg) {
   printf("> exec(%s)\n", arg);
   if (starts_with(arg, "play ")) {
@@ -147,6 +149,10 @@ void exec(const char* arg) {
   if (strcmp(arg, "elf") == 0) {
     pagemap_t* user_pagemap = vmm_new_pagemap();
     process_create(_test_elf, user_pagemap);
+  }
+
+  if (strcmp(arg, "quick") == 0) {
+    process_create(_run_quickly_then_die, NULL);
   }
 }
 

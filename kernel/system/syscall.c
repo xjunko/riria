@@ -2,6 +2,7 @@
 #include <riria/cpu/msr.h>
 #include <riria/cpu/regs.h>
 #include <riria/drivers/serial.h>
+#include <riria/process.h>
 #include <riria/syscall.h>
 #include <riria/types.h>
 #include <stdio.h>
@@ -18,6 +19,15 @@ static void print_sysregs(sysregs_t* r) {
 }
 
 // impl
+#define SYSCALL_EXIT 1
+int syscall_exit(sysregs_t* r) {
+  int code = r->rdi;
+  printf("[sys] syscall_exit: code=%d\n", code);
+  process_exit(code);
+  r->rax = 0;
+  return 0;
+}
+
 #define SYSCALL_WRITE 4
 int syscall_write(sysregs_t* r) {
   int fd = r->rdi;
@@ -48,6 +58,9 @@ void syscall_handler(sysregs_t* r) {
 #endif
 
   switch (r->rax) {
+    case SYSCALL_EXIT:
+      r->rax = syscall_exit(r);
+      break;
     case SYSCALL_WRITE:
       r->rax = syscall_write(r);
       break;
