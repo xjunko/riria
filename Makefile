@@ -11,7 +11,7 @@ STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 EMU       = qemu-system-x86_64
 EMU_ARGS  = -smp 1 -m 128M -vga virtio
 EMU_ARGS += -serial stdio -no-reboot -no-shutdown \
-            -audio driver=sdl,model=ac97,id=0
+            -audio driver=sdl,model=ac97,id=0 -enable-kvm
 
 TMP_OBJ = /tmp/riria-obj
 TMP_ISO = /tmp/riria-iso
@@ -19,9 +19,12 @@ TMP_FINAL = /tmp/riria-final
 
 BASE = ./base
 
+# notes:
+# on clang, -fstack-protector-all instantly crashes the kernel
+
 # compiler setup
-override KERNEL_CFLAGS  = -Wall -Wextra -Werror -ffreestanding -O3
-override KERNEL_CFLAGS += -fno-stack-protector -fstack-check -fsanitize=undefined  \
+override KERNEL_CFLAGS  = -Wall -Wextra -Werror -ffreestanding -O0
+override KERNEL_CFLAGS += -fstack-protector-all -fstack-check -fsanitize=undefined \
 						  -fno-lto                                                 \
                           -fno-PIC -ffunction-sections -m64 -march=x86-64          \
 						  -mabi=sysv -mno-80387 -mno-mmx -mno-sse -mno-sse2        \
@@ -103,11 +106,7 @@ $(TMP_FINAL)/image.iso: $(TMP_OBJ) $(BASE)/boot/kernel.bin $(BASE)/boot/limine/r
         -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin \
         -efi-boot-part --efi-boot-image --protective-msdos-label \
         $(TMP_ISO) -o $(TMP_FINAL)/image.iso
-
-	# clean
-	#rm -rf $(TMP_ISO)
-	#rm -rf $(TMP_OBJ)
-
+		
 run: $(TMP_FINAL)/image.iso
 	$(EMU) $(EMU_ARGS) -cdrom $<
 
