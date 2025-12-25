@@ -27,8 +27,8 @@ this is a very poor attempt at making an operating system, you should take every
 - PCI
     - ac97 audio driver which somewhat works
 - elf exec
-    - we have basic non-elf exec working
-    - userspace somewhat works now
+    - ELF works, though, it's a bit janky atm with the userspace linker setup.
+    - userspace is okayish now
 - scheduling
     - stupidly basic round robin scheduler, it does the job.
 - kernel shell
