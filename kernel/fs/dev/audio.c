@@ -9,8 +9,8 @@ ssize_t _audio_write(const char* path, const void* buffer, size_t sz) {
 
   while (!ac97_can_write())
     ;
+
   int wb = ac97_write_pcm((uint8_t*)buffer, sz);
-  ASSERT(wb <= 0 && "no buffers left");
 
   return wb;
 }
