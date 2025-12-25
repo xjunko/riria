@@ -143,8 +143,8 @@ void irq_install(void) {
   irq_setup_gates();
 
   // pit - used for scheduling
-  // HACK: directly set PIT to be 1000HZ
-  uint16_t divisor = 1000 / 1193182;
+  // HACK: directly set PIT to be 250HZ
+  uint16_t divisor = 250 / 1193182;
   outb(0x43, 0x36);
   outb(0x40, (uint8_t)(divisor & 0xFF));
   outb(0x40, (uint8_t)((divisor >> 8) & 0xFF));
