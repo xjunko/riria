@@ -30,6 +30,8 @@ this is a very poor attempt at making an operating system, you should take every
     - userspace somewhat works now
 - scheduling
     - stupidly basic round robin scheduler, it does the job.
+- kernel shell
+    - it can play music and run the test executable
 
 ### things that doesnt work:
 - proper libc

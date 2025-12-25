@@ -22,7 +22,7 @@ BASE = ./base
 # on clang, -fstack-protector-all instantly crashes the kernel
 
 # compiler setup
-override KERNEL_CFLAGS  = -Wall -Wextra -Werror -ffreestanding -O3
+override KERNEL_CFLAGS  = -Wall -Wextra -Werror -ffreestanding -O0
 override KERNEL_CFLAGS += -fstack-protector-all -fstack-check -fsanitize=undefined \
 						  -fno-lto                                                 \
                           -fno-PIC -ffunction-sections -m64 -march=x86-64          \
