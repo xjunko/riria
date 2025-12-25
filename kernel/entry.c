@@ -53,6 +53,5 @@ void kmain(void) {
   // shell
   process_create(kernel_shell, NULL);
 
-  for (;;)
-    ;
+  HALT();
 }

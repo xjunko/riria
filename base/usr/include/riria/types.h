@@ -54,5 +54,10 @@ typedef int64_t ssize_t;
 #define OS_CODENAME "aina"
 #define OS_VERSION "0.0.1a"
 
+#define HALT()                    \
+  do {                            \
+    for (;;) asm volatile("hlt"); \
+  } while (0)
+
 void kprintf(const char*, ...);
 __attribute__((noreturn)) void panic(const char*);
