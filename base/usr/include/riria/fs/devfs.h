@@ -24,3 +24,6 @@ void devfs_stdout_install(void);
 
 // /dev/audio
 void devfs_audio_install(void);
+
+// /dev/keyboard
+void devfs_keyboard_install(void);

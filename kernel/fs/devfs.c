@@ -83,5 +83,6 @@ void devfs_init(vfs_impl_t* impl) {
   devfs_zero_install();
   devfs_stdout_install();
   devfs_audio_install();
+  devfs_keyboard_install();
   printf(" OK, ");
 }
