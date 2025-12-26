@@ -97,7 +97,7 @@ void process_spawn_user(const uint8_t* code, size_t len, uint64_t entry_addr) {
   }
 
   uintptr_t stack_top = USER_STACK_TOP;
-  uintptr_t stack_base = USER_STACK_BASE;
+  uintptr_t stack_base = USER_VIRT_END;
 
   for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
     uintptr_t page = (uintptr_t)pmm_allocate();
