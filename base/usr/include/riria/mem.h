@@ -63,6 +63,6 @@ void vmm_invalidate_page(uintptr_t);
 uint64_t* vmm_get_next_level(uint64_t*, size_t, bool, uint64_t);
 uintptr_t vmm_virt_to_phys(pagemap_t*, uintptr_t);
 bool vmm_map_page(pagemap_t*, uintptr_t, uintptr_t, uint64_t);
-bool vmm_unmap_page(pagemap_t*, uintptr_t, uintptr_t, uint64_t);
+bool vmm_unmap_page(pagemap_t*, uintptr_t);
 
 void vmm_pagefault(regs_t* r);

@@ -157,11 +157,7 @@ fail:
   return false;
 }
 
-bool vmm_unmap_page(pagemap_t* pagemap, uintptr_t virt, uintptr_t phys,
-                    uint64_t flags) {
-  UNUSED(phys);
-  UNUSED(flags);
-
+bool vmm_unmap_page(pagemap_t* pagemap, uintptr_t virt) {
   if (virt % PAGE_SIZE != 0) {
     panic("page not aligned in vmm_unmap_page");
   }
