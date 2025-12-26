@@ -348,11 +348,13 @@ void vmm_pagefault(regs_t* r) {
 
   printf("==================\n");
   printf("[err] failed in process=%d\n", process_get_current()->id);
+  printf("[err] while in %s mode\n", (r->cs & 0x3) == 0 ? "kernel" : "user");
   printf("[err] page fault at address 0x%x\n", fault_addr);
   print_regs(r);
 
   // we probably can handle it, if its from the userspace.
-  if (fault_addr > USER_VIRT_START && fault_addr < USER_VIRT_END) {
+  if (fault_addr >= USER_VIRT_START && fault_addr < USER_VIRT_END) {
+    printf("[vmm] attempting to allocate page for user process...\n");
     uint64_t page_addr = fault_addr & ~(PAGE_SIZE - 1);
     uintptr_t page = (uintptr_t)pmm_allocate();
     vmm_map_page(process_get_current()->pagemap, page_addr, page,
