@@ -130,6 +130,9 @@ void process_spawn_elf(uint8_t* elf_data, size_t len) {
 }
 
 void process_reap(void) {
+  if (!process_head) return;
+  if (!process_head->next) return;
+
   process_node_t* prev = process_head;
   process_node_t* curr = process_head->next;
 
@@ -174,6 +177,9 @@ int process_schedule(regs_t* r) {
 
   irq_ack(0);
   int_disable();
+  irq_ack(0);
+
+  process_reap();
 
   if (!should_schedule || !process_head || !process_head->next) goto cleanup;
   process_reap();
