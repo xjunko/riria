@@ -40,6 +40,13 @@ static int _vfs_get_fd(vfs_file_t* file) {
   return -1;
 }
 
+vfs_file_t* vfs_get_from_fd(int fd) {
+  if (fd < 0 || fd >= VFS_MAX_FILE_DESCRIPTORS || !open_files[fd]) {
+    return NULL;
+  }
+  return open_files[fd];
+}
+
 vfs_file_t* vfs_open(const char* path, int flags, int mode) {
   if (!path) return NULL;
 
