@@ -197,11 +197,15 @@ cleanup:
 
 void process_exit(int code) {
   UNUSED(code);
+  if (!process_get_current()) {
+    panic("exiting without a process");
+  }
   process_get_current()->state = PROCESS_DEAD;
   process_schedule(NULL);
 }
 
+// there should be a process, always.
 process_t* process_get_current(void) {
   if (process_head) return process_head->process;
-  return NULL;
+  UNREACHABLE();
 }
