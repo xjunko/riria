@@ -147,6 +147,15 @@ void process_reap(void) {
         }
       }
 
+      // unmap the stacks
+      uintptr_t stack_top = USER_STACK_TOP;
+      uintptr_t stack_base = USER_STACK_BASE;
+      printf("[prc] unmapping user stack pages...");
+      for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
+        vmm_unmap_page(proc->pagemap, i);
+      }
+      printf(" OK!\n");
+
       free(proc->stack);
       free(proc);
       free(curr);
