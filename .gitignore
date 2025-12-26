@@ -11,6 +11,8 @@ base/boot/*.bin
 base/boot/limine/repo/*
 
 # initramfs
-misc/*
 misc/initramfs/*
 base/boot/initramfs.tar
+
+# userspace
+misc/userspace/libc/*.a
