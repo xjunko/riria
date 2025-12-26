@@ -58,6 +58,12 @@ uint64_t elf64_load(uint8_t* elf_data, size_t len) {
     uint64_t end_addr = (phdr->vaddr + phdr->memsz);
     uint64_t end_page = (end_addr + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
 
+    ASSERT(start_page < end_page);
+    ASSERT(end_page > start_page);
+    ASSERT(start_page % PAGE_SIZE == 0);
+    ASSERT(end_page % PAGE_SIZE == 0);
+    ASSERT(start_page != 0);
+
     uintptr_t addr = start_page;
     while (addr < end_page) {
       uintptr_t page = (uintptr_t)pmm_allocate();
@@ -73,6 +79,9 @@ uint64_t elf64_load(uint8_t* elf_data, size_t len) {
       return 0;
     }
 
+    ASSERT(elf_data + file_start != NULL);
+    ASSERT((void*)phdr->vaddr != NULL);
+    ASSERT(phdr->filesz > 0);
     memcpy((void*)phdr->vaddr, elf_data + file_start, phdr->filesz);
 
     if (phdr->memsz > phdr->filesz) {
