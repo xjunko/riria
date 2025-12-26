@@ -1,4 +1,5 @@
 #include <riria/types.h>
+#include <riria/ubsan.h>
 #include <stdint.h>
 
 uint64_t __stack_chk_guard = 0xB00B5;
@@ -15,7 +16,9 @@ void __ubsan_handle_pointer_overflow(void) {
 }
 
 __attribute__((no_sanitize("undefined")))
-void __ubsan_handle_type_mismatch_v1(void) {
+void __ubsan_handle_type_mismatch_v1(struct type_mismatch_v1_data *data, uintptr_t ptr) {
+    if (ptr == 0) printf("null pointer is being used! \n");
+    printf("happens at %s:%u:%u\n", data->location.file, data->location.line, data->location.column);
     panic("type mismatch detected");
 }
 
