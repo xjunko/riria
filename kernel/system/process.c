@@ -96,8 +96,8 @@ void process_spawn_user(const uint8_t* code, size_t len, uint64_t entry_addr) {
     vmm_map_page(process_get_current()->pagemap, i, page, flags);
   }
 
-  uintptr_t stack_top = USER_STACK_BASE;
-  uintptr_t stack_base = stack_top - STACK_SIZE;
+  uintptr_t stack_top = USER_STACK_TOP;
+  uintptr_t stack_base = USER_STACK_BASE;
 
   for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
     uintptr_t page = (uintptr_t)pmm_allocate();
@@ -117,8 +117,8 @@ void process_spawn_elf(uint8_t* elf_data, size_t len) {
   uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
   uint64_t entry_addr = elf64_load(elf_data, len);
 
-  uintptr_t stack_top = USER_STACK_BASE;
-  uintptr_t stack_base = stack_top - STACK_SIZE;
+  uintptr_t stack_top = USER_STACK_TOP;
+  uintptr_t stack_base = USER_STACK_BASE;
 
   for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
     uintptr_t page = (uintptr_t)pmm_allocate();

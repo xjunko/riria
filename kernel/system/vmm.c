@@ -351,5 +351,14 @@ void vmm_pagefault(regs_t* r) {
   printf("[err] page fault at address 0x%x\n", fault_addr);
   print_regs(r);
 
+  // we probably can handle it, if its from the userspace.
+  if (fault_addr > USER_VIRT_START && fault_addr < USER_VIRT_END) {
+    uint64_t page_addr = fault_addr & ~(PAGE_SIZE - 1);
+    uintptr_t page = (uintptr_t)pmm_allocate();
+    vmm_map_page(process_get_current()->pagemap, page_addr, page,
+                 PTE_PRESENT | PTE_WRITABLE | PTE_USER);
+    return;
+  }
+
   panic("erm, page fault occurred");
 }

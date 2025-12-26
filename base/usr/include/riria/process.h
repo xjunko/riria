@@ -3,9 +3,11 @@
 #include <riria/mem.h>
 #include <riria/types.h>
 
+#define USER_VIRT_START 0x10000  // entry are expected to be loaded here
 #define STACK_SIZE 0x10000
-#define USER_VIRT_START 0x10000
-#define USER_STACK_BASE 0x80000000
+#define USER_STACK_TOP 0x80000000
+#define USER_STACK_BASE (USER_STACK_TOP - STACK_SIZE)
+#define USER_VIRT_END (USER_STACK_BASE + STACK_SIZE)
 
 typedef enum {
   PROCESS_READY,
