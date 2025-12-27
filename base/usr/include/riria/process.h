@@ -10,6 +10,11 @@
 #define USER_VIRT_END (USER_STACK_BASE + STACK_SIZE)
 
 typedef enum {
+  PROCESS_KERNEL,
+  PROCESS_USER,
+} process_type_t;
+
+typedef enum {
   PROCESS_READY,
   PROCESS_RUNNING,
   PROCESS_SLEEPING,
@@ -17,16 +22,20 @@ typedef enum {
 } process_state_t;
 
 typedef struct process {
+  // rsp for both kernel and user mode
+  // because of reasons, the assembly expects these to be in this order
+  // check kernel/system/asm/syscall.S
+  uint64_t krsp;  // 0
+  uint64_t ursp;  // 8
+
   uint32_t id;
+  const char* name;
+  process_type_t type;
+  process_state_t state;
 
   void* stack;
   void* stack_top;
-  uint64_t krsp;
-  uint64_t ursp;
   pagemap_t* pagemap;
-
-  process_state_t state;
-  bool is_user;
 } process_t;
 
 typedef struct process_node {

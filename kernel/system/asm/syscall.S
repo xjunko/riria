@@ -8,13 +8,11 @@
 .type syscall_trap, @function
 syscall_trap:
     swapgs
-    cli 
 
     # these points to process_t.ursp and process_t.krsp
     # changes done to the struct will require changes here as well
-    # TODO: maybe use a special struct for this in process_t?
-    mov %rsp, %gs:32
-    mov %gs:24, %rsp
+    mov %rsp, %gs:8 # save user rsp
+    mov %gs:0, %rsp # load kernel rsp
 
     push %rax
     push %rbx
@@ -52,8 +50,8 @@ syscall_trap:
     pop %rbx
     pop %rax
 
-    mov %rsp, %gs:24
-    mov %gs:32, %rsp
+    mov %rsp, %gs:0 # save kernel rsp
+    mov %gs:8, %rsp # load user rsp
 
     swapgs
     sysretq

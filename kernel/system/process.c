@@ -34,7 +34,7 @@ void process_create(process_entry_t entry, pagemap_t* pagemap) {
   new_process->stack_top =
       (void*)(((uintptr_t)new_process->stack + STACK_SIZE) & ~0xF);
 
-  new_process->is_user = false;
+  new_process->type = PROCESS_KERNEL;
   new_process->id = next_pid++;
 
   if (!pagemap) {
