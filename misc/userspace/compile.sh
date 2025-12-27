@@ -9,19 +9,19 @@ fi
 SRC="$1"
 BASENAME=$(basename "$SRC" .c)
 
-export PATH="/home/lain/Projects/Tooling/Cross/x86_64/gcc-x86_64-elf_7.1.0/bin/:$PATH"
+export PATH="/home/lain/Projects/Tooling/Cross/x86_64/gcc-x86_64-elf_15.2.0/bin/:$PATH"
 
-CC=clang               # or x86_64-elf-gcc
+CC=x86_64-elf-gcc
 LD=x86_64-elf-ld
 OBJCOPY=x86_64-elf-objcopy
 
 $CC \
-    -O2 -mgeneral-regs-only -ffreestanding -fPIC \
-    -nostdlib -fno-asynchronous-unwind-tables -fno-stack-protector \
+    -O0 -ffreestanding -fno-pie -fno-pic \
+    -nostdlib -fno-stack-protector\
     -I./libc/include \
     -c "$SRC" -o "$BASENAME.o"
 
-$LD -nostdlib -T link.ld -o "$BASENAME.elf" "$BASENAME.o" libc/libriria.a
+$LD -nostdlib -static -T link.ld -o "$BASENAME.elf" "$BASENAME.o" libc/libriria.a
 
 $OBJCOPY -O binary "$BASENAME.elf" "$BASENAME.bin"
 
