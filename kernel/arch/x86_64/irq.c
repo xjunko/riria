@@ -174,10 +174,6 @@ void print_regs(regs_t* r) {
 }
 
 void irq_handler(regs_t* r) {
-  if (r->cs & 0x3) {
-    asm volatile("swapgs");
-  }
-
   int_disable();
   if (r->int_no <= 47 && r->int_no >= 32) {
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
@@ -191,8 +187,6 @@ void irq_handler(regs_t* r) {
     irq_ack(r->int_no - 32);
   }
 done:
-  if (r->cs & 0x3) {
-    asm volatile("swapgs");
-  }
+
   int_resume();
 }

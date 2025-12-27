@@ -31,8 +31,6 @@ IRQ 15, 47
 .type irq_handler, @function
 
 irq_common:
-    swapgs
-
     # push all registers
     push %rax
     push %rbx
@@ -77,6 +75,5 @@ irq_common:
     pop %rax
 
     addq $16, %rsp 
-    swapgs
     iretq
 

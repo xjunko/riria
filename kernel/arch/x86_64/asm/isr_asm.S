@@ -56,8 +56,6 @@ ISR_NOERR 31
 .type isr_handler, @function
 
 isr_common:
-    swapgs
-
     # push all registers
     push %rax
     push %rbx
@@ -100,8 +98,6 @@ isr_common:
     pop %rcx
     pop %rbx
     pop %rax
-
-    swapgs
 
     addq $16, %rsp 
     iretq

@@ -72,10 +72,6 @@ void isr_install(void) {
 }
 
 void isr_handler(regs_t* r) {
-  if (r->cs & 0x3) {
-    asm volatile("swapgs");
-  }
-
 #ifdef DEBUG
   printf("[isr] interrupt received: 0x%x (%d)\n", r->int_no, r->int_no);
   print_regs(r);
@@ -88,9 +84,5 @@ void isr_handler(regs_t* r) {
     handler(r);
   } else {
     printf("[isr] unhandled interrupt: %d\n", r->int_no);
-  }
-
-  if (r->cs & 0x3) {
-    asm volatile("swapgs");
   }
 }
