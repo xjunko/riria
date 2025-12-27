@@ -76,8 +76,8 @@ void isr_handler(regs_t* r) {
     asm volatile("swapgs");
   }
 
-  printf("[isr] interrupt received: 0x%x (%d)\n", r->int_no, r->int_no);
 #ifdef DEBUG
+  printf("[isr] interrupt received: 0x%x (%d)\n", r->int_no, r->int_no);
   print_regs(r);
   printf("[isr] rip: 0x%lx cs: 0x%lx rsp: 0x%lx ss: 0x%lx\n", r->rip, r->cs,
          r->rsp, r->ss);
