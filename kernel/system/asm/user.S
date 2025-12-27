@@ -6,6 +6,9 @@
 .global switch_to_user
 .type switch_to_user, @function
 switch_to_user:
+    # RDI contains the entry point address
+    mov %rdi, %r15  # Save entry point to r15
+    
     mov $0x23, %ax
     mov %ax, %ds
     mov %ax, %es
@@ -17,6 +20,6 @@ switch_to_user:
     pushq %rax 
     pushq $0x200   # rflags
     pushq $0x2B    # user code segment
-    pushq $0x10000 # user instruction pointer
+    pushq %r15     # user instruction pointer (entry point from parameter)
 
     iretq

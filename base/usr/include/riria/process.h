@@ -48,4 +48,4 @@ __attribute__((noreturn)) void process_spawn_user(const uint8_t*, size_t,
 __attribute__((noreturn)) void process_spawn_elf(uint8_t*, size_t);
 
 __attribute__((noreturn)) extern void process_switch(uint64_t*, uint64_t*);
-__attribute__((noreturn)) extern void switch_to_user(void);
+__attribute__((noreturn)) extern void switch_to_user(uint64_t entry_point);
