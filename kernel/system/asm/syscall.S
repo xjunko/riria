@@ -12,6 +12,7 @@ syscall_trap:
 
     # these points to process_t.ursp and process_t.krsp
     # changes done to the struct will require changes here as well
+    # TODO: maybe use a special struct for this in process_t?
     mov %rsp, %gs:32
     mov %gs:24, %rsp
 
