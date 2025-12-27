@@ -1,8 +1,8 @@
 #!/bin/env bash
-set -e
+set -euo pipefail
 
 if [ $# -lt 1 ]; then
-    echo "Usage: $0 <file>"
+    echo "Usage: $0 <file.c>"
     exit 1
 fi
 
@@ -12,20 +12,19 @@ BASENAME=$(basename "$SRC" .c)
 export PATH="/home/lain/Projects/Tooling/Cross/x86_64/gcc-x86_64-elf_15.2.0/bin/:$PATH"
 
 CC=x86_64-elf-gcc
-LD=x86_64-elf-ld
 OBJCOPY=x86_64-elf-objcopy
 
-$CC \
-    -O0 -ffreestanding -fno-pie -fno-pic \
-    -nostdlib -fno-stack-protector\
+$CC -O0 -ffreestanding -fno-pie -fno-pic \
+    -nostdlib -fno-stack-protector \
+    -static \
     -I./libc/include \
-    -c "$SRC" -o "$BASENAME.o"
-
-$LD -nostdlib -static -T link.ld -o "$BASENAME.elf" "$BASENAME.o" libc/libriria.a
+    "$SRC" libc/libriria.a \
+    -T link.ld \
+    -o "$BASENAME.elf"
 
 $OBJCOPY -O binary "$BASENAME.elf" "$BASENAME.bin"
 
+mkdir -p ../initramfs
 mv "$BASENAME.bin" ../initramfs/
 mv "$BASENAME.elf" ../initramfs/
 
-rm "$BASENAME.o"
