@@ -6,5 +6,5 @@ int print(const char* msg) {
   while (msg[len] != '\0') {
     len++;
   }
-  return syscall3(4, fd, (long)msg, len);
+  return syscall3(1, fd, (long)msg, len);
 }
