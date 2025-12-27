@@ -93,5 +93,6 @@ uint64_t elf64_load(uint8_t* elf_data, size_t len) {
              phdr->memsz - phdr->filesz);
     }
   }
+
   return header->entry_point;
 }

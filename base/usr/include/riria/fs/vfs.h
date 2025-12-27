@@ -61,4 +61,5 @@ vfs_file_t* vfs_get_from_fd(int fd);
 int vfs_sys_open(const char*, int, int);
 int vfs_sys_read(int, void*, size_t);
 int vfs_sys_write(int, const void*, size_t);
+int vfs_sys_seek(int, size_t, int);
 int vfs_sys_close(int);

@@ -69,6 +69,8 @@ vfs_file_t* vfs_open(const char* path, int flags, int mode) {
   file->mode = mode;
   file->fs = mnt;
 
+  open_files[file->id] = file;
+
   return file;
 }
 

@@ -17,6 +17,11 @@ int vfs_sys_write(int fd, const void* buffer, size_t sz) {
   return vfs_write(file, buffer, sz);
 }
 
+int vfs_sys_seek(int fd, size_t offset, int whence) {
+  vfs_file_t* file = vfs_get_from_fd(fd);
+  return vfs_seek(file, offset, whence);
+}
+
 int vfs_sys_close(int fd) {
   vfs_file_t* file = vfs_get_from_fd(fd);
   return vfs_close(file);

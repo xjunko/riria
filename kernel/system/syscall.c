@@ -58,7 +58,9 @@ int syscall_write(sysregs_t* r) {
   char* buf = (char*)r->rsi;
   size_t len = r->rdx;
 
+#ifdef DEBUG
   printf("[sys] syscall_write: fd=%d buf=%p len=%d\n", fd, buf, len);
+#endif
 
   // system fds
   if (fd < VFS_FD_OFFSET) {
@@ -117,9 +119,23 @@ int syscall_close(sysregs_t* r) {
   return ret;
 }
 
+#define SYSCALL_SEEK 8
+int syscall_seek(sysregs_t* r) {
+  int fd = r->rdi;
+  size_t offset = (size_t)r->rsi;
+  int whence = (int)r->rdx;
+
+  int ret = vfs_sys_seek(fd, offset, whence);
+  if (ret < 0) {
+    ret = -1;
+  }
+
+  return ret;
+}
+
 void syscall_handler(sysregs_t* r) {
-  printf("[sys] syscall invoked: %d\n", r->rax);
 #ifdef DEBUG
+  printf("[sys] syscall invoked: %d\n", r->rax);
   print_sysregs(r);
 #endif
 
@@ -141,6 +157,9 @@ void syscall_handler(sysregs_t* r) {
       break;
     case SYSCALL_CLOSE:
       r->rax = syscall_close(r);
+      break;
+    case SYSCALL_SEEK:
+      r->rax = syscall_seek(r);
       break;
     default:
       r->rax = -1;
