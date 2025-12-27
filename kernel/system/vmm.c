@@ -152,6 +152,7 @@ bool vmm_map_page(pagemap_t* pagemap, uintptr_t virt, uintptr_t phys,
   return true;
 
 fail:
+  int_enable();
   printf("failed to map page for virt=0x%x", virt);
   panic("vmm_map_page failure");
   return false;
@@ -349,10 +350,12 @@ void vmm_pagefault(regs_t* r) {
   print_regs(r);
 
   // we probably can handle it, if its from the userspace.
-  if (fault_addr >= USER_VIRT_START && fault_addr < USER_VIRT_END) {
+  if (fault_addr >= USER_VIRT_START) {
     printf("[vmm] attempting to allocate page for user process...\n");
     uint64_t page_addr = fault_addr & ~(PAGE_SIZE - 1);
+    printf("[vmm] allocating page at 0x%x\n", page_addr);
     uintptr_t page = (uintptr_t)pmm_allocate();
+    printf("[vmm] mapping page 0x%x to 0x%x\n", page, page_addr);
     vmm_map_page(process_get_current()->pagemap, page_addr, page,
                  PTE_PRESENT | PTE_WRITABLE | PTE_USER);
     return;

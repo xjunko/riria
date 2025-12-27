@@ -6,6 +6,8 @@
 .global switch_to_user
 .type switch_to_user, @function
 switch_to_user:
+    mov %rdi, %r15
+
     mov $0x23, %ax
     mov %ax, %ds
     mov %ax, %es
@@ -17,6 +19,6 @@ switch_to_user:
     pushq %rax 
     pushq $0x200   # rflags
     pushq $0x2B    # user code segment
-    pushq $0x10000 # user instruction pointer
+    pushq %r15     # entry point
 
     iretq

@@ -47,10 +47,14 @@ uint64_t elf64_load(uint8_t* elf_data, size_t len) {
       continue;
     }
 
-    uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
+    uint64_t flags = PTE_PRESENT | PTE_USER;
+
+    if (phdr->flags & PF_W) {
+      flags |= PTE_WRITABLE;
+    }
 
     if (!(phdr->flags & PF_X)) {
-      panic("NX \n");
+      printf("[elf] setting NX for segment %d\n", i);
       flags |= PTE_NX;
     }
 
