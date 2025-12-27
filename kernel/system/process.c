@@ -107,7 +107,7 @@ void process_spawn_user(const uint8_t* code, size_t len, uint64_t entry_addr) {
   memcpy((void*)entry_addr, code, len);
 
   asm volatile("swapgs");
-  switch_to_user(entry_addr);
+  switch_to_user(entry_addr, stack_top);
 }
 
 // clang-format off
@@ -126,7 +126,7 @@ void process_spawn_elf(uint8_t* elf_data, size_t len) {
   }
 
   asm volatile("swapgs");
-  switch_to_user(entry_addr);
+  switch_to_user(entry_addr, stack_top);
 }
 
 void process_reap(void) {
