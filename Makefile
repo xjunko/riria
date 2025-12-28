@@ -9,17 +9,15 @@ LD    = $(TOOLCHAIN)/$(ARCH)-$(OS)-gcc
 STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 
 EMU       = qemu-system-x86_64
-EMU_ARGS  = -smp 1 -m 128M -vga virtio
+EMU_ARGS  = -cpu host -machine q35,accel=kvm -smp 1 -m 128M -vga virtio
 EMU_ARGS += -serial stdio -no-reboot -no-shutdown \
-            -audio driver=sdl,model=ac97,id=0 -enable-kvm
-TMP_OBJ = /tmp/riria-obj
-TMP_ISO = /tmp/riria-iso
+            -audio driver=sdl,model=ac97,id=0
+			
+TMP_OBJ   = /tmp/riria-obj
+TMP_ISO   = /tmp/riria-iso
 TMP_FINAL = /tmp/riria-final
 
 BASE = ./base
-
-# notes:
-# on clang, -fstack-protector-all instantly crashes the kernel
 
 # compiler setup
 override KERNEL_CFLAGS  = -Wall -Wextra -Werror -ffreestanding -O3
