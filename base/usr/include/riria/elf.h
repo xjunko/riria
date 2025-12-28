@@ -1,4 +1,5 @@
 #pragma once
+#include <riria/process.h>
 #include <riria/types.h>
 
 typedef struct elf64_header {
@@ -39,4 +40,4 @@ typedef struct elf64_phdr {
 #define PF_W 2
 #define PF_R 4
 
-uint64_t elf64_load(uint8_t*, size_t);
+uint64_t elf64_load(pagemap_t*, uint8_t*, size_t);

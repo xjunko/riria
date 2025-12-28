@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-uint64_t elf64_load(uint8_t* elf_data, size_t len) {
+uint64_t elf64_load(pagemap_t* pagemap, uint8_t* elf_data, size_t len) {
   if (len < sizeof(elf64_header_t)) {
     panic("elf64_load: invalid ELF header size\n");
     return 0;
@@ -71,7 +71,8 @@ uint64_t elf64_load(uint8_t* elf_data, size_t len) {
     uintptr_t addr = start_page;
     while (addr < end_page) {
       uintptr_t page = (uintptr_t)pmm_allocate();
-      vmm_map_page(process_get_current()->pagemap, addr, page, flags);
+      ASSERT(page);
+      vmm_map_page(pagemap, addr, page, flags);
       addr += PAGE_SIZE;
     }
 
@@ -86,11 +87,11 @@ uint64_t elf64_load(uint8_t* elf_data, size_t len) {
     ASSERT(elf_data + file_start != NULL);
     ASSERT((void*)phdr->vaddr != NULL);
     ASSERT(phdr->filesz > 0);
-    memcpy((void*)phdr->vaddr, elf_data + file_start, phdr->filesz);
+    vmm_map_copy(pagemap, phdr->vaddr, elf_data + file_start, phdr->filesz);
 
     if (phdr->memsz > phdr->filesz) {
-      memset((void*)(phdr->vaddr + phdr->filesz), 0,
-             phdr->memsz - phdr->filesz);
+      vmm_map_zero(pagemap, phdr->vaddr + phdr->filesz,
+                   phdr->memsz - phdr->filesz);
     }
   }
 
