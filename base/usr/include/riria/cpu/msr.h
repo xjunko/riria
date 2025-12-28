@@ -10,6 +10,7 @@
 #define MSR_CSTAR 0xC0000083        /* compat mode SYSCALL target */
 #define MSR_SYSCALL_MASK 0xC0000084 /* EFLAGS mask for syscall */
 
+#define MSR_FS_BASE 0xC0000100        /* 64bit FS base */
 #define MSR_USER_GS_BASE 0xC0000101   /* 64bit GS base */
 #define MSR_KERNEL_GS_BASE 0xC0000102 /* 64bit GS base */
 
