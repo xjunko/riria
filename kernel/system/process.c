@@ -13,11 +13,36 @@ process_node_t* process_head = NULL;
 uint32_t next_pid = 0;
 bool should_schedule = false;
 
+#define PROCESS_PUSH(new_process)             \
+  do {                                        \
+    if (!process_head) {                      \
+      new_process->next = new_process;        \
+      process_head = new_process;             \
+    } else {                                  \
+      new_process->next = process_head->next; \
+      process_head->next = new_process;       \
+    }                                         \
+                                              \
+    should_schedule = true;                   \
+  } while (0);
+
 #define PUSH_STACK(stack, value) *--stack = value;
 
-void _null(void) {
-  process_get_current()->state = PROCESS_DEAD;
-  HALT();
+void forever(void) { HALT(); }
+
+void process_entry(process_entry_t entry) {
+  int_enable();
+  entry();
+  process_exit(0);
+  UNREACHABLE();
+}
+
+void process_user_entry(process_entry_t entry, uint64_t stack_top) {
+  int_enable();
+  asm volatile("swapgs");
+  switch_to_user((uint64_t)entry, stack_top);
+  process_exit(0);
+  UNREACHABLE();
 }
 
 void process_create(process_entry_t entry, pagemap_t* pagemap) {
@@ -34,57 +59,78 @@ void process_create(process_entry_t entry, pagemap_t* pagemap) {
   new_process->stack_top =
       (void*)(((uintptr_t)new_process->stack + STACK_SIZE) & ~0xF);
 
-  new_process->type = PROCESS_KERNEL;
-  new_process->id = next_pid++;
-
   if (!pagemap) {
     new_process->pagemap = kernel_pagemap;
   } else {
     new_process->pagemap = pagemap;
   }
-  printf("[prc]  PGM=%p\n", new_process->pagemap);
-  printf("[prc]  PID=%u\n", new_process->id);
-
-  uint64_t* stack = (uint64_t*)new_process->stack_top;
 
   if (!entry) {
-    entry = _null;
+    entry = forever;
   }
 
-  PUSH_STACK(stack, (uint64_t)_null);
+  uint64_t* stack = (uint64_t*)new_process->stack_top;
+  PUSH_STACK(stack, (uint64_t)process_kernel_trampoline);
+  PUSH_STACK(stack, 0);
+  PUSH_STACK(stack, 0);
+  PUSH_STACK(stack, 0);
+  PUSH_STACK(stack, 0);
+  PUSH_STACK(stack, 0);
   PUSH_STACK(stack, (uint64_t)entry);
-  PUSH_STACK(stack, 0x202);
 
-  PUSH_STACK(stack, 0);
-  PUSH_STACK(stack, 0);
-  PUSH_STACK(stack, 0);
-  PUSH_STACK(stack, 0);
-  PUSH_STACK(stack, 0);
-  PUSH_STACK(stack, 0);
-
+  new_process->id = next_pid++;
+  new_process->type = PROCESS_KERNEL;
   new_process->krsp = (uint64_t)stack;
   new_process->ursp = 0;
 
   process_node_t* new_node = malloc(sizeof(process_node_t));
   new_node->process = new_process;
-
-  if (!process_head) {
-    new_node->next = new_node;
-    process_head = new_node;
-  } else {
-    new_node->next = process_head->next;
-    process_head->next = new_node;
-  }
-
-  should_schedule = true;
+  PROCESS_PUSH(new_node);
 }
 
-// clang-format off
-__attribute__((noreturn))
-// used like: process_spawn_user(buf, sz, USER_VIRT_START);
-// clang-format on
+void process_create_user(process_entry_t entry, pagemap_t* pagemap,
+                         uintptr_t user_stack_top) {
+  ASSERT(pagemap != NULL);
+  printf("[prc] new user process (entry=%p) (pagemap=%p)\n", entry, pagemap);
+
+  process_t* new_process = malloc(sizeof(process_t));
+  ASSERT(new_process);
+  memset(new_process, 0, sizeof(process_t));
+
+  new_process->stack = malloc(STACK_SIZE);
+  ASSERT(new_process->stack);
+  memset(new_process->stack, 0, STACK_SIZE);
+
+  new_process->stack_top =
+      (void*)(((uintptr_t)new_process->stack + STACK_SIZE) & ~0xF);
+  new_process->pagemap = pagemap;
+
+  if (!entry) {
+    entry = forever;
+  }
+
+  uint64_t* stack = (uint64_t*)new_process->stack_top;
+  PUSH_STACK(stack, (uint64_t)process_user_trampoline);
+  PUSH_STACK(stack, 0);
+  PUSH_STACK(stack, 0);
+  PUSH_STACK(stack, 0);
+  PUSH_STACK(stack, 0);
+  PUSH_STACK(stack, (uint64_t)user_stack_top);
+  PUSH_STACK(stack, (uint64_t)entry);
+
+  new_process->id = next_pid++;
+  new_process->type = PROCESS_USER;
+  new_process->krsp = (uint64_t)stack;
+  new_process->ursp = (uint64_t)user_stack_top;
+
+  process_node_t* new_node = malloc(sizeof(process_node_t));
+  new_node->process = new_process;
+  PROCESS_PUSH(new_node);
+}
+
 void process_spawn_user(const uint8_t* code, size_t len, uint64_t entry_addr) {
-  UNUSED(len);
+  pagemap_t* pagemap = vmm_new_pagemap();
+
   uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
   uintptr_t virt_start = entry_addr;
   size_t mem_required = len;
@@ -93,7 +139,7 @@ void process_spawn_user(const uint8_t* code, size_t len, uint64_t entry_addr) {
 
   for (size_t i = virt_start; i < virt_end; i += PAGE_SIZE) {
     uintptr_t page = (uintptr_t)pmm_allocate();
-    vmm_map_page(process_get_current()->pagemap, i, page, flags);
+    vmm_map_page(pagemap, i, page, flags);
   }
 
   uintptr_t stack_top = USER_STACK_TOP;
@@ -101,32 +147,25 @@ void process_spawn_user(const uint8_t* code, size_t len, uint64_t entry_addr) {
 
   for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
     uintptr_t page = (uintptr_t)pmm_allocate();
-    vmm_map_page(process_get_current()->pagemap, i, page, flags);
+    vmm_map_page(pagemap, i, page, flags);
   }
-
-  memcpy((void*)entry_addr, code, len);
-
-  asm volatile("swapgs");
-  switch_to_user(entry_addr, stack_top);
+  vmm_map_copy(pagemap, entry_addr, code, len);
+  process_create_user((process_entry_t)entry_addr, pagemap, stack_top);
 }
 
-// clang-format off
-__attribute__((noreturn))
-// clang-format on
 void process_spawn_elf(uint8_t* elf_data, size_t len) {
+  pagemap_t* pagemap = vmm_new_pagemap();
   uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
-  uint64_t entry_addr = elf64_load(elf_data, len);
+  uint64_t entry_addr = elf64_load(pagemap, elf_data, len);
 
   uintptr_t stack_top = USER_STACK_TOP;
   uintptr_t stack_base = USER_STACK_BASE;
 
   for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
     uintptr_t page = (uintptr_t)pmm_allocate();
-    vmm_map_page(process_get_current()->pagemap, i, page, flags);
+    vmm_map_page(pagemap, i, page, flags);
   }
-
-  asm volatile("swapgs");
-  switch_to_user(entry_addr, stack_top);
+  process_create_user((process_entry_t)entry_addr, pagemap, stack_top);
 }
 
 void process_reap(void) {
@@ -174,12 +213,8 @@ void process_reap(void) {
 // accepts regs_t but dont need it.
 int process_schedule(regs_t* r) {
   UNUSED(r);
-
-  irq_ack(0);
   int_disable();
   irq_ack(0);
-
-  process_reap();
 
   if (!should_schedule || !process_head || !process_head->next) goto cleanup;
   process_reap();
@@ -206,7 +241,7 @@ int process_schedule(regs_t* r) {
   process_switch(&prev_proc->krsp, &curr_proc->krsp);
 
 cleanup:
-  int_resume();
+  int_enable();
   return 0;
 }
 
