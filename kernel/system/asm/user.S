@@ -7,12 +7,6 @@ switch_to_user:
     mov %rdi, %r15 # entry point
     mov %rsi, %r14 # user stack pointer
 
-    mov $0x23, %ax
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
-
     pushq $0x23    # user data segment
     pushq %r14     # user stack pointer
     pushq $0x200   # rflags
