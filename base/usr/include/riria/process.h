@@ -36,6 +36,8 @@ typedef struct process {
   void* stack;
   void* stack_top;
   pagemap_t* pagemap;
+
+  uint64_t user_heap_position;
 } process_t;
 
 typedef struct process_node {

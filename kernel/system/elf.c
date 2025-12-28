@@ -54,7 +54,6 @@ uint64_t elf64_load(pagemap_t* pagemap, uint8_t* elf_data, size_t len) {
     }
 
     if (!(phdr->flags & PF_X)) {
-      printf("[elf] setting NX for segment %d\n", i);
       flags |= PTE_NX;
     }
 

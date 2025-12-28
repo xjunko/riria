@@ -82,6 +82,7 @@ void process_create(process_entry_t entry, pagemap_t* pagemap) {
   new_process->type = PROCESS_KERNEL;
   new_process->krsp = (uint64_t)stack;
   new_process->ursp = 0;
+  new_process->user_heap_position = 0;
 
   process_node_t* new_node = malloc(sizeof(process_node_t));
   new_node->process = new_process;
@@ -110,6 +111,7 @@ void process_create_user(process_entry_t entry, pagemap_t* pagemap,
   }
 
   uint64_t* stack = (uint64_t*)new_process->stack_top;
+
   PUSH_STACK(stack, (uint64_t)process_user_trampoline);
   PUSH_STACK(stack, 0);
   PUSH_STACK(stack, 0);
@@ -122,6 +124,7 @@ void process_create_user(process_entry_t entry, pagemap_t* pagemap,
   new_process->type = PROCESS_USER;
   new_process->krsp = (uint64_t)stack;
   new_process->ursp = (uint64_t)user_stack_top;
+  new_process->user_heap_position = USER_VIRT_START;
 
   process_node_t* new_node = malloc(sizeof(process_node_t));
   new_node->process = new_process;
@@ -165,6 +168,14 @@ void process_spawn_elf(uint8_t* elf_data, size_t len) {
     uintptr_t page = (uintptr_t)pmm_allocate();
     vmm_map_page(pagemap, i, page, flags);
   }
+
+  uint64_t* stack = (uint64_t*)stack_top;
+  PUSH_STACK(stack, 0);  // alignment
+  PUSH_STACK(stack, 0);  // envp
+  PUSH_STACK(stack, 0);  // argp
+  PUSH_STACK(stack, 0);  // argc
+  stack_top = (uintptr_t)stack;
+
   process_create_user((process_entry_t)entry_addr, pagemap, stack_top);
 }
 

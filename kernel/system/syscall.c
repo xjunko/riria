@@ -133,6 +133,45 @@ int syscall_seek(sysregs_t* r) {
   return ret;
 }
 
+#define SYSCALL_GET_THREAD_ID 30
+int syscall_get_thread_id(sysregs_t* r) {
+  UNUSED(r);
+  return process_get_current()->id;
+}
+
+#define SYSCALL_MMAP 31
+int syscall_mmap(sysregs_t* r) {
+  r->rax = process_get_current()->user_heap_position;
+  uint32_t heap_pages = ALIGN_UP(r->rdi, PAGE_SIZE) / PAGE_SIZE;
+  printf("[sys] syscall_mmap: size=%lu pages=%u curr_pos=0x%lx\n", r->rdi,
+         heap_pages, r->rax);
+
+  for (uint32_t i = 0; i < heap_pages; i++) {
+    uintptr_t page = (uintptr_t)pmm_allocate();
+    vmm_map_page(process_get_current()->pagemap,
+                 process_get_current()->user_heap_position, page,
+                 PTE_PRESENT | PTE_USER | PTE_WRITABLE | PTE_NX);
+    process_get_current()->user_heap_position += PAGE_SIZE;
+  }
+  printf("[sys] new heap position: 0x%lx\n",
+         process_get_current()->user_heap_position);
+  return r->rax;
+}
+
+#define SYSCALL_WRITEFSBASE 32
+int syscall_write_fsbase(sysregs_t* r) {
+  uint64_t fsbase = r->rdi;
+
+  printf("[sys] syscall_write_fsbase: fsbase=0x%lx\n", fsbase);
+  if (fsbase <= 0x00007FFFFFFFFFFF) {
+    printf("[sys] writing fsbase to 0x%lx\n", fsbase);
+    wrmsr(MSR_FS_BASE, fsbase);
+    return 0;
+  }
+
+  return -1;
+}
+
 void syscall_handler(sysregs_t* r) {
 #ifdef DEBUG
   printf("[sys] syscall invoked: %d\n", r->rax);
@@ -160,6 +199,15 @@ void syscall_handler(sysregs_t* r) {
       break;
     case SYSCALL_SEEK:
       r->rax = syscall_seek(r);
+      break;
+    case SYSCALL_GET_THREAD_ID:
+      r->rax = syscall_get_thread_id(r);
+      break;
+    case SYSCALL_MMAP:
+      r->rax = syscall_mmap(r);
+      break;
+    case SYSCALL_WRITEFSBASE:
+      r->rax = syscall_write_fsbase(r);
       break;
     default:
       r->rax = -1;
