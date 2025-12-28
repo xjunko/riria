@@ -37,13 +37,13 @@ void _test_elf(void) {
     return;
   }
 
-  process_spawn_elf(buf, stat.size);
-
   int ret = vfs_close(elf_file);
   if (ret < 0) {
     printf("failed: close \n");
     return;
   }
+
+  process_spawn_elf(buf, stat.size);
 }
 
 void _test_bin(void) {
@@ -78,7 +78,6 @@ void _test_bin(void) {
     return;
   }
 
-  printf("switching: sayonara!\n");
   process_spawn_user(buf, stat.size, USER_VIRT_START);
 }
 
@@ -142,13 +141,11 @@ void exec(const char* arg) {
   }
 
   if (strcmp(arg, "test") == 0) {
-    pagemap_t* user_pagemap = vmm_new_pagemap();
-    process_create(_test_bin, user_pagemap);
+    process_create(_test_bin, NULL);
   }
 
   if (strcmp(arg, "elf") == 0) {
-    pagemap_t* user_pagemap = vmm_new_pagemap();
-    process_create(_test_elf, user_pagemap);
+    process_create(_test_elf, NULL);
   }
 
   if (strcmp(arg, "quick") == 0) {
