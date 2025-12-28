@@ -26,6 +26,12 @@ static void _gpf_fault_handler(regs_t* r) {
   panic("general protection fault");
 }
 
+static void _irq_invalid_opcode(regs_t* r) {
+  printf("[irq] invalid opcode exception!\n");
+  print_regs(r);
+  panic("invalid opcode exception");
+}
+
 void isr_install(void) {
   // should work now
   ISR_SET(0);
@@ -60,6 +66,9 @@ void isr_install(void) {
   ISR_SET(29);
   ISR_SET(30);
   ISR_SET(31);
+
+  idt_set_gate(6, _isr6, 0x08, 0x8E);  // invalid opcode
+  isr_install_handler(6, _irq_invalid_opcode);
 
   idt_set_gate(13, _isr13, 0x08, 0x8E);  // general protection fault
   isr_install_handler(13, _gpf_fault_handler);
