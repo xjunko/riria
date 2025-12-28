@@ -65,4 +65,7 @@ uintptr_t vmm_virt_to_phys(pagemap_t*, uintptr_t);
 bool vmm_map_page(pagemap_t*, uintptr_t, uintptr_t, uint64_t);
 bool vmm_unmap_page(pagemap_t*, uintptr_t);
 
+void vmm_map_copy(pagemap_t*, uintptr_t, const void*, size_t);
+void vmm_map_zero(pagemap_t*, uintptr_t, size_t);
+
 void vmm_pagefault(regs_t* r);

@@ -246,6 +246,46 @@ uintptr_t vmm_virt_to_phys(pagemap_t* pagemap, uintptr_t virt) {
   return phys + offset;
 }
 
+void vmm_map_copy(pagemap_t* pagemap, uintptr_t virt, const void* src,
+                  size_t len) {
+  const uint8_t* buffer = (const uint8_t*)src;
+  size_t copied = 0;
+
+  while (copied < len) {
+    uintptr_t curr_virt = virt + copied;
+    uintptr_t curr_phys = vmm_virt_to_phys(pagemap, curr_virt);
+    if (!curr_phys) panic("vmm_map_copy: target not mapped");
+
+    size_t page_offset = curr_virt & (PAGE_SIZE - 1);
+    size_t chunk = PAGE_SIZE - page_offset;
+    size_t remaining = len - copied;
+    if (chunk > remaining) chunk = remaining;
+
+    void* dest = (void*)(curr_phys + VMM_HIGHER_HALF);
+    memcpy(dest, buffer + copied, chunk);
+    copied += chunk;
+  }
+}
+
+void vmm_map_zero(pagemap_t* pagemap, uintptr_t virt, size_t len) {
+  size_t cleared = 0;
+
+  while (cleared < len) {
+    uintptr_t curr_virt = virt + cleared;
+    uintptr_t curr_phys = vmm_virt_to_phys(pagemap, curr_virt);
+    if (!curr_phys) panic("vmm_map_zero: target not mapped");
+
+    size_t page_offset = curr_virt & (PAGE_SIZE - 1);
+    size_t chunk = PAGE_SIZE - page_offset;
+    size_t remaining = len - cleared;
+    if (chunk > remaining) chunk = remaining;
+
+    void* dest = (void*)(curr_phys + VMM_HIGHER_HALF);
+    memset(dest, 0, chunk);
+    cleared += chunk;
+  }
+}
+
 void vmm_install(void) {
   printf("[vmm] VMM INIT...");
   void* pml4_phys = pmm_allocate();
