@@ -23,7 +23,9 @@ static void print_sysregs(sysregs_t* r) {
 #define SYSCALL_EXIT 1
 int syscall_exit(sysregs_t* r) {
   int code = r->rdi;
+#ifdef DEBUG
   printf("[sys] syscall_exit: code=%d\n", code);
+#endif
   process_exit(code);
   r->rax = 0;
   return 0;
@@ -143,8 +145,11 @@ int syscall_get_thread_id(sysregs_t* r) {
 int syscall_mmap(sysregs_t* r) {
   r->rax = process_get_current()->user_heap_position;
   uint32_t heap_pages = ALIGN_UP(r->rdi, PAGE_SIZE) / PAGE_SIZE;
+
+#ifdef DEBUG
   printf("[sys] syscall_mmap: size=%lu pages=%u curr_pos=0x%lx\n", r->rdi,
          heap_pages, r->rax);
+#endif
 
   for (uint32_t i = 0; i < heap_pages; i++) {
     uintptr_t page = (uintptr_t)pmm_allocate();
@@ -153,8 +158,11 @@ int syscall_mmap(sysregs_t* r) {
                  PTE_PRESENT | PTE_USER | PTE_WRITABLE | PTE_NX);
     process_get_current()->user_heap_position += PAGE_SIZE;
   }
+#ifdef DEBUG
   printf("[sys] new heap position: 0x%lx\n",
          process_get_current()->user_heap_position);
+#endif
+
   return r->rax;
 }
 
@@ -162,7 +170,9 @@ int syscall_mmap(sysregs_t* r) {
 int syscall_write_fsbase(sysregs_t* r) {
   uint64_t fsbase = r->rdi;
 
+#ifdef DEBUG
   printf("[sys] syscall_write_fsbase: fsbase=0x%lx\n", fsbase);
+#endif
   if (fsbase <= 0x00007FFFFFFFFFFF) {
     printf("[sys] writing fsbase to 0x%lx\n", fsbase);
     wrmsr(MSR_FS_BASE, fsbase);

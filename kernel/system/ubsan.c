@@ -2,7 +2,7 @@
 #include <riria/ubsan.h>
 #include <stdint.h>
 
-uint64_t __stack_chk_guard = 0xB00B5;
+uint64_t __stack_chk_guard = 0x17701369420BABE;
 
 // clang-format off
 __attribute__((noreturn)) 
