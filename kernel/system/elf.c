@@ -5,10 +5,9 @@
 #include <stdio.h>
 #include <string.h>
 
-uint64_t elf64_load(pagemap_t* pagemap, uint8_t* elf_data, size_t len) {
+elf_info_t elf64_load(pagemap_t* pagemap, uint8_t* elf_data, size_t len) {
   if (len < sizeof(elf64_header_t)) {
     panic("elf64_load: invalid ELF header size\n");
-    return 0;
   }
 
   elf64_header_t* header = (elf64_header_t*)elf_data;
@@ -16,29 +15,28 @@ uint64_t elf64_load(pagemap_t* pagemap, uint8_t* elf_data, size_t len) {
   if (header->magic[0] != 0x7F || header->magic[1] != 'E' ||
       header->magic[2] != 'L' || header->magic[3] != 'F') {
     panic("invalid magic\n");
-    return 0;
   }
 
   if (header->class_ != 2) {
     panic("not an elf64\n");
-    return 0;
   }
 
   if (header->machine != 0x3E) {
     panic("not amd64\n");
-    return 0;
   }
 
   uint64_t ph_offset = header->phoff;
   uint64_t ph_size = header->phentsize;
   uint16_t ph_count = header->phnum;
 
+  uint64_t base_addr = UINT64_MAX;
+  uint64_t end_addr = 0x0;
+
   for (size_t i = 0; i < ph_count; i++) {
     uint64_t ph_start = ph_offset + (i * ph_size);
 
     if (ph_start + ph_size > len) {
       panic("header out of bound!\n");
-      return 0;
     }
 
     elf64_phdr_t* phdr = (elf64_phdr_t*)(elf_data + ph_start);
@@ -58,8 +56,8 @@ uint64_t elf64_load(pagemap_t* pagemap, uint8_t* elf_data, size_t len) {
     }
 
     uint64_t start_page = phdr->vaddr & ~(PAGE_SIZE - 1);
-    uint64_t end_addr = (phdr->vaddr + phdr->memsz);
-    uint64_t end_page = (end_addr + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
+    uint64_t segment_end = phdr->vaddr + phdr->memsz;
+    uint64_t end_page = (segment_end + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
 
     ASSERT(start_page < end_page);
     ASSERT(end_page > start_page);
@@ -80,7 +78,6 @@ uint64_t elf64_load(pagemap_t* pagemap, uint8_t* elf_data, size_t len) {
 
     if (file_end > len) {
       panic("segment out of bound!\n");
-      return 0;
     }
 
     ASSERT(elf_data + file_start != NULL);
@@ -92,7 +89,16 @@ uint64_t elf64_load(pagemap_t* pagemap, uint8_t* elf_data, size_t len) {
       vmm_map_zero(pagemap, phdr->vaddr + phdr->filesz,
                    phdr->memsz - phdr->filesz);
     }
+
+    if (phdr->vaddr < base_addr) base_addr = phdr->vaddr;
+    if (segment_end > end_addr) end_addr = segment_end;
   }
 
-  return header->entry_point;
+  elf_info_t info;
+  info.entry = header->entry_point;
+  info.size = end_addr - base_addr;
+  info.base = base_addr;
+  printf("[elf] loaded elf64: entry=0x%lx size=0x%lx\n", info.entry, info.size);
+
+  return info;
 }

@@ -3,11 +3,9 @@
 #include <riria/mem.h>
 #include <riria/types.h>
 
-#define USER_VIRT_START 0x10000  // entry are expected to be loaded here
-#define STACK_SIZE 0x10000
-#define USER_STACK_TOP 0x80000000
-#define USER_STACK_BASE (USER_STACK_TOP - STACK_SIZE)
-#define USER_VIRT_END (USER_STACK_BASE + STACK_SIZE)
+#define STACK_SIZE 0x00010000
+#define USER_STACK_TOP 0xB0000000
+#define USER_STACK_BASE 0xAFF00000
 
 typedef enum {
   PROCESS_KERNEL,
@@ -37,7 +35,11 @@ typedef struct process {
   void* stack_top;
   pagemap_t* pagemap;
 
+  uint64_t user_heap_start;
   uint64_t user_heap_position;
+
+  uint64_t fsbase;
+  char fpu_state[512] __attribute__((aligned(16)));
 } process_t;
 
 typedef struct process_node {
@@ -48,7 +50,7 @@ typedef struct process_node {
 typedef void (*process_entry_t)(void);
 
 void process_create(process_entry_t, pagemap_t*);
-void process_create_user(process_entry_t, pagemap_t*, uintptr_t);
+void process_create_user(process_entry_t, pagemap_t*, uintptr_t, uintptr_t);
 
 void process_reap(void);
 int process_schedule(regs_t* r);

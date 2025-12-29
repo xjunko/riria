@@ -35,9 +35,15 @@ typedef struct elf64_phdr {
   uint64_t align;
 } elf64_phdr_t;
 
+typedef struct elf_info {
+  uint64_t entry;
+  uint64_t size;
+  uint64_t base;
+} elf_info_t;
+
 #define PT_LOAD 1
 #define PF_X 1
 #define PF_W 2
 #define PF_R 4
 
-uint64_t elf64_load(pagemap_t*, uint8_t*, size_t);
+elf_info_t elf64_load(pagemap_t*, uint8_t*, size_t);

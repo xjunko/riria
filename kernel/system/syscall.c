@@ -147,26 +147,31 @@ int syscall_get_thread_id(sysregs_t* r) {
 
 #define SYSCALL_MMAP 31
 int syscall_mmap(sysregs_t* r) {
-  r->rax = process_get_current()->user_heap_position;
-  uint32_t heap_pages = ALIGN_UP(r->rdi, PAGE_SIZE) / PAGE_SIZE;
+  process_t* current = process_get_current();
 
-#ifdef DEBUG
-  printf("[sys] syscall_mmap: size=%lu pages=%u curr_pos=0x%lx\n", r->rdi,
-         heap_pages, r->rax);
-#endif
+  // Align current heap position to page
+  uintptr_t heap_start =
+      (current->user_heap_position + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
+
+  r->rax = heap_start;  // return old heap start
+
+  // Round up requested size to page multiple
+  uint32_t heap_pages = ALIGN_UP(r->rdi, PAGE_SIZE) / PAGE_SIZE;
 
   for (uint32_t i = 0; i < heap_pages; i++) {
     uintptr_t page = (uintptr_t)pmm_allocate();
-    vmm_map_page(process_get_current()->pagemap,
-                 process_get_current()->user_heap_position, page,
-                 PTE_PRESENT | PTE_USER | PTE_WRITABLE | PTE_NX);
-    process_get_current()->user_heap_position += PAGE_SIZE;
-  }
-#ifdef DEBUG
-  printf("[sys] new heap position: 0x%lx\n",
-         process_get_current()->user_heap_position);
-#endif
+    if (!page) {
+      panic("Out of physical memory in mmap!\n");
+    }
 
+    vmm_map_page(current->pagemap, heap_start, page,
+                 PTE_PRESENT | PTE_USER | PTE_WRITABLE);
+    heap_start += PAGE_SIZE;
+  }
+
+  current->user_heap_position = heap_start;
+
+  printf("[sys] new heap position: 0x%lx\n", current->user_heap_position);
   return r->rax;
 }
 

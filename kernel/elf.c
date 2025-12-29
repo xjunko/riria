@@ -41,4 +41,7 @@ void run_elf(const char* path) {
   process_spawn_elf(buf, stat.size);
 }
 
-void userspace_shell(void) { run_elf("/init/shell.elf"); }
+void userspace_shell(void) {
+  run_elf("/init/doomgeneric");
+  // run_elf("/init/shell.elf");
+}

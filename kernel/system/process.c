@@ -82,6 +82,7 @@ void process_create(process_entry_t entry, pagemap_t* pagemap) {
   new_process->type = PROCESS_KERNEL;
   new_process->krsp = (uint64_t)stack;
   new_process->ursp = 0;
+  new_process->user_heap_start = 0;
   new_process->user_heap_position = 0;
 
   process_node_t* new_node = malloc(sizeof(process_node_t));
@@ -90,9 +91,10 @@ void process_create(process_entry_t entry, pagemap_t* pagemap) {
 }
 
 void process_create_user(process_entry_t entry, pagemap_t* pagemap,
-                         uintptr_t user_stack_top) {
+                         uintptr_t user_stack_top, uintptr_t user_heap) {
   ASSERT(pagemap != NULL);
-  printf("[prc] new user process (entry=%p) (pagemap=%p)\n", entry, pagemap);
+  printf("[prc] new user process (entry=%p) (pagemap=%p) (user_heap=%p)\n",
+         entry, pagemap, user_heap);
 
   process_t* new_process = malloc(sizeof(process_t));
   ASSERT(new_process);
@@ -124,7 +126,9 @@ void process_create_user(process_entry_t entry, pagemap_t* pagemap,
   new_process->type = PROCESS_USER;
   new_process->krsp = (uint64_t)stack;
   new_process->ursp = (uint64_t)user_stack_top;
-  new_process->user_heap_position = USER_VIRT_START;
+
+  new_process->user_heap_start = user_heap;
+  new_process->user_heap_position = user_heap;
 
   process_node_t* new_node = malloc(sizeof(process_node_t));
   new_node->process = new_process;
@@ -134,7 +138,14 @@ void process_create_user(process_entry_t entry, pagemap_t* pagemap,
 void process_spawn_elf(uint8_t* elf_data, size_t len) {
   pagemap_t* pagemap = vmm_new_pagemap();
   uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
-  uint64_t entry_addr = elf64_load(pagemap, elf_data, len);
+  elf_info_t elf = elf64_load(pagemap, elf_data, len);
+
+  uintptr_t user_heap = elf.base + elf.size;
+  user_heap = (user_heap + 0xFFF) & ~0xFFF;
+  printf("[prc] elf heap starts at %p\n", (void*)user_heap);
+  uintptr_t heap_page = (uintptr_t)pmm_allocate();
+  vmm_map_page(pagemap, user_heap, heap_page, flags);
+  printf("[prc] user heap mapped at %p\n", (void*)user_heap);
 
   uintptr_t stack_top = USER_STACK_TOP;
   uintptr_t stack_base = USER_STACK_BASE;
@@ -151,7 +162,8 @@ void process_spawn_elf(uint8_t* elf_data, size_t len) {
   PUSH_STACK(stack, 0);  // argc
   stack_top = (uintptr_t)stack;
 
-  process_create_user((process_entry_t)entry_addr, pagemap, stack_top);
+  process_create_user((process_entry_t)elf.entry, pagemap, stack_top,
+                      user_heap);
 }
 
 void process_reap(void) {
@@ -213,9 +225,14 @@ int process_schedule(regs_t* r) {
 
   ASSERT(curr_proc->pagemap);
   vmm_switch_pagemap(curr_proc->pagemap);
-
   ASSERT(curr_proc->stack_top);
   tss_set_stack((uint64_t)curr_proc->stack_top);
+
+  asm volatile("fxsave %0" ::"m"(prev_proc->fpu_state));
+  asm volatile("fxrstor %0" ::"m"(curr_proc->fpu_state));
+  prev_proc->fsbase = rdmsr(MSR_FS_BASE);
+
+  wrmsr(MSR_FS_BASE, curr_proc->fsbase);
   wrmsr(MSR_USER_GS_BASE, (uint64_t)curr_proc);
 
   ASSERT(&prev_proc->krsp);

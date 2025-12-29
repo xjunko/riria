@@ -383,13 +383,43 @@ void vmm_pagefault(regs_t* r) {
   uint64_t fault_addr;
   asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
 
-  // userspace, we can try to allocate a page for them.
-  if (fault_addr >= USER_VIRT_START && fault_addr < USER_VIRT_END) {
+  // heap
+  // HACK: stupid hack
+  if (fault_addr >= process_get_current()->user_heap_start &&
+      fault_addr < process_get_current()->user_heap_position + PAGE_SIZE) {
+    printf(
+        "[vmm] page fault in userspace at address 0x%x, allocating heap page\n",
+        fault_addr);
+    uint64_t page_addr = fault_addr & ~(PAGE_SIZE - 1);
+    uintptr_t page = (uintptr_t)pmm_allocate();
+    vmm_map_page(process_get_current()->pagemap, page_addr, page,
+                 PTE_PRESENT | PTE_WRITABLE | PTE_USER);
+
+    if (page_addr >= process_get_current()->user_heap_position) {
+      process_get_current()->user_heap_position = page_addr + PAGE_SIZE;
+    }
+
+    return;  // phew ^^;
+  }
+
+  // stack
+  if (fault_addr >= USER_STACK_BASE && fault_addr < USER_STACK_TOP) {
+    printf(
+        "[vmm] page fault in userspace at address 0x%x, allocating stack "
+        "page\n",
+        fault_addr);
     uint64_t page_addr = fault_addr & ~(PAGE_SIZE - 1);
     uintptr_t page = (uintptr_t)pmm_allocate();
     vmm_map_page(process_get_current()->pagemap, page_addr, page,
                  PTE_PRESENT | PTE_WRITABLE | PTE_USER);
     return;  // phew ^^;
+  }
+
+  // HACK: if we're in userspace just exit the process
+  if ((r->cs & 0x3) != 0) {
+    printf("[vmm] page fault in userspace at address 0x%x, exiting process\n",
+           fault_addr);
+    process_exit(-1);
   }
 
   // shit hits the bed, crash out.
