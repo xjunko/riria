@@ -46,41 +46,6 @@ void _test_elf(void) {
   process_spawn_elf(buf, stat.size);
 }
 
-void _test_bin(void) {
-  vfs_file_t* bin_file = vfs_open("/init/test.bin", 0, 0);
-  if (!bin_file) {
-    printf("failed: open \n");
-    return;
-  }
-
-  vfs_file_stat_t stat;
-  int res = vfs_stat(bin_file, &stat);
-  if (res < 0) {
-    printf("failed: stat");
-    return;
-  }
-
-  void* buf = malloc(stat.size);
-  if (!buf) {
-    printf("failed: malloc");
-    return;
-  }
-
-  int bytes_read = vfs_read(bin_file, buf, stat.size);
-  if (bytes_read < 0) {
-    printf("failed: read \n");
-    return;
-  }
-
-  int ret = vfs_close(bin_file);
-  if (ret < 0) {
-    printf("failed: close \n");
-    return;
-  }
-
-  process_spawn_user(buf, stat.size, USER_VIRT_START);
-}
-
 void _mus_play_proc(void) {
   printf("path: cyberfantasia.pcm \n");
 
@@ -138,10 +103,6 @@ void exec(const char* arg) {
   printf("> exec(%s)\n", arg);
   if (starts_with(arg, "play ")) {
     process_create(_mus_play_proc, NULL);
-  }
-
-  if (strcmp(arg, "test") == 0) {
-    process_create(_test_bin, NULL);
   }
 
   if (strcmp(arg, "elf") == 0) {

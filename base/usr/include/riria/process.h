@@ -56,7 +56,6 @@ void process_exit(int);
 
 process_t* process_get_current(void);
 
-void process_spawn_user(const uint8_t*, size_t, uint64_t);
 void process_spawn_elf(uint8_t*, size_t);
 
 __attribute__((noreturn)) extern void process_switch(uint64_t*, uint64_t*);

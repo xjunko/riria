@@ -131,31 +131,6 @@ void process_create_user(process_entry_t entry, pagemap_t* pagemap,
   PROCESS_PUSH(new_node);
 }
 
-void process_spawn_user(const uint8_t* code, size_t len, uint64_t entry_addr) {
-  pagemap_t* pagemap = vmm_new_pagemap();
-
-  uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
-  uintptr_t virt_start = entry_addr;
-  size_t mem_required = len;
-  uintptr_t virt_end =
-      (entry_addr + PAGE_SIZE + mem_required - 1) & ~(PAGE_SIZE - 1);
-
-  for (size_t i = virt_start; i < virt_end; i += PAGE_SIZE) {
-    uintptr_t page = (uintptr_t)pmm_allocate();
-    vmm_map_page(pagemap, i, page, flags);
-  }
-
-  uintptr_t stack_top = USER_STACK_TOP;
-  uintptr_t stack_base = USER_STACK_BASE;
-
-  for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
-    uintptr_t page = (uintptr_t)pmm_allocate();
-    vmm_map_page(pagemap, i, page, flags);
-  }
-  vmm_map_copy(pagemap, entry_addr, code, len);
-  process_create_user((process_entry_t)entry_addr, pagemap, stack_top);
-}
-
 void process_spawn_elf(uint8_t* elf_data, size_t len) {
   pagemap_t* pagemap = vmm_new_pagemap();
   uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
