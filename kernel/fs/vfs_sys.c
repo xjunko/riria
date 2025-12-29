@@ -19,7 +19,12 @@ int vfs_sys_write(int fd, const void* buffer, size_t sz) {
 
 int vfs_sys_seek(int fd, size_t offset, int whence) {
   vfs_file_t* file = vfs_get_from_fd(fd);
-  return vfs_seek(file, offset, whence);
+  // HACK: mlibc straight up errors out if /stdout if the ret is negative
+  int ret = vfs_seek(file, offset, whence);
+  if (fd == 1) {
+    return ret < 0 ? 0 : ret;
+  }
+  return ret;
 }
 
 int vfs_sys_close(int fd) {

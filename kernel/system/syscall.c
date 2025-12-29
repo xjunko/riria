@@ -44,6 +44,10 @@ int syscall_read(sysregs_t* r) {
   char* buf = (char*)r->rsi;
   size_t len = r->rdx;
 
+#ifdef DEBUG
+  printf("[sys] syscall_read: fd=%d buf=%p len=%d\n", fd, buf, len);
+#endif
+
   int ret = vfs_sys_read(fd, buf, len);
   if (ret < 0) {
     ret = -1;
