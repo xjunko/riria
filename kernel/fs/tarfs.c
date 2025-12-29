@@ -68,7 +68,7 @@ ssize_t tarfs_read(const char* path, void* buffer, size_t sz) {
   strcpy(tar_path + 1, path);
 
   unsigned char* ptr = (unsigned char*)initramfs;
-  while (!memcmp(ptr + 257, "ustar", 5)) {
+  while (memcmp(ptr + 257, "ustar", 5) == 0) {
     int file_size = oct2bin(ptr + 0x7c, 11);
     char* path = (char*)ptr;
 
@@ -89,7 +89,6 @@ ssize_t tarfs_read(const char* path, void* buffer, size_t sz) {
       for (size_t i = 0; i < bytes_to_read; i++) {
         ((unsigned char*)buffer)[i] = data[i];
       }
-
       return bytes_to_read;
     }
 
@@ -151,7 +150,7 @@ void tarfs_init(vfs_impl_t* impl) {
   }
 
   unsigned char* ptr = (unsigned char*)initramfs;
-  while (!memcmp(ptr + 257, "ustar", 5)) {
+  while (memcmp(ptr + 257, "ustar", 5) == 0) {
     int file_size = oct2bin(ptr + 0x7c, 11);
     char* path = (char*)ptr;
 
