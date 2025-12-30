@@ -32,14 +32,14 @@ bool should_schedule = false;
 void forever(void) { HALT(); }
 
 void process_entry(process_entry_t entry) {
-  int_enable();
+  IRQ_RES;
   entry();
   process_exit(0);
   UNREACHABLE();
 }
 
 void process_user_entry(process_entry_t entry, uint64_t stack_top) {
-  int_enable();
+  IRQ_RES;
   asm volatile("swapgs");
   switch_to_user((uint64_t)entry, stack_top);
   process_exit(0);
@@ -216,7 +216,7 @@ void process_reap(void) {
 // accepts regs_t but dont need it.
 int process_schedule(regs_t* r) {
   UNUSED(r);
-  int_disable();
+  IRQ_OFF;
   irq_ack(0);
 
   // a very long, just in case if stmt...
@@ -253,7 +253,7 @@ int process_schedule(regs_t* r) {
   process_switch(&prev_proc->krsp, &curr_proc->krsp);
 
 cleanup:
-  int_enable();
+  IRQ_RES;
   return 0;
 }
 

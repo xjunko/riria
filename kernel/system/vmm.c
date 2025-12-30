@@ -43,6 +43,7 @@
 #include <riria/cpu/regs.h>
 #include <riria/mem.h>
 #include <riria/process.h>
+#include <riria/spinlock.h>
 #include <riria/types.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +53,8 @@ extern uint8_t _text_begin[], _text_end[];
 extern uint8_t _rodata_begin[], _rodata_end[];
 extern uint8_t _data_begin[], _data_end[];
 extern uint8_t _bss_begin[], _bss_end[];
+
+static spin_lock_t vmm_lock = {0};
 
 pagemap_t* kernel_pagemap = NULL;
 
@@ -66,6 +69,7 @@ static bool vmm_is_table_empty(uint64_t* table) {
 }
 
 pagemap_t* vmm_new_pagemap(void) {
+  spin_lock(&vmm_lock);
   void* pml4_phys = pmm_allocate();
   if (!pml4_phys) {
     panic("failed to allocate new pagemap pml4");
@@ -77,6 +81,7 @@ pagemap_t* vmm_new_pagemap(void) {
 
   pagemap_t* new_pagemap = malloc(sizeof(pagemap_t));
   new_pagemap->base_virt = pml4_virt;
+  spin_unlock(&vmm_lock);
 
   return new_pagemap;
 }
@@ -134,6 +139,7 @@ bool vmm_map_page(pagemap_t* pagemap, uintptr_t virt, uintptr_t phys,
   uint64_t alloc_flags = PTE_PRESENT | PTE_WRITABLE;
   if (flags & PTE_USER) alloc_flags |= PTE_USER;
 
+  spin_lock(&vmm_lock);
   uint64_t* pml4 = pagemap->base_virt;
   if (!pml4) goto fail;
   uint64_t* pdpt = vmm_get_next_level(pml4, pml4_idx, true, alloc_flags);
@@ -143,14 +149,13 @@ bool vmm_map_page(pagemap_t* pagemap, uintptr_t virt, uintptr_t phys,
   uint64_t* pt = vmm_get_next_level(pd, pd_idx, true, alloc_flags);
   if (!pt) goto fail;
 
-  int_disable();
   pt[pt_idx] = phys | flags | PTE_PRESENT;
   vmm_invalidate_page(virt);
-  int_enable();
-
+  spin_unlock(&vmm_lock);
   return true;
 
 fail:
+  spin_unlock(&vmm_lock);
   printf("failed to map page for virt=0x%x", virt);
   panic("vmm_map_page failure");
   return false;
@@ -188,7 +193,7 @@ bool vmm_unmap_page(pagemap_t* pagemap, uintptr_t virt) {
     return true;
   }
 
-  int_disable();
+  spin_lock(&vmm_lock);
   // null out the page table entry
   pt[pt_idx] = 0;
   vmm_invalidate_page(virt);
@@ -220,7 +225,7 @@ bool vmm_unmap_page(pagemap_t* pagemap, uintptr_t virt) {
   }
 
 cleanup:
-  int_enable();
+  spin_unlock(&vmm_lock);
   return true;
 }
 
@@ -251,7 +256,7 @@ void vmm_map_copy(pagemap_t* pagemap, uintptr_t virt, const void* src,
                   size_t len) {
   const uint8_t* buffer = (const uint8_t*)src;
   size_t copied = 0;
-
+  spin_lock(&vmm_lock);
   while (copied < len) {
     uintptr_t curr_virt = virt + copied;
     uintptr_t curr_phys = vmm_virt_to_phys(pagemap, curr_virt);
@@ -266,11 +271,13 @@ void vmm_map_copy(pagemap_t* pagemap, uintptr_t virt, const void* src,
     memcpy(dest, buffer + copied, chunk);
     copied += chunk;
   }
+  spin_unlock(&vmm_lock);
 }
 
 void vmm_map_zero(pagemap_t* pagemap, uintptr_t virt, size_t len) {
   size_t cleared = 0;
 
+  spin_lock(&vmm_lock);
   while (cleared < len) {
     uintptr_t curr_virt = virt + cleared;
     uintptr_t curr_phys = vmm_virt_to_phys(pagemap, curr_virt);
@@ -285,6 +292,7 @@ void vmm_map_zero(pagemap_t* pagemap, uintptr_t virt, size_t len) {
     memset(dest, 0, chunk);
     cleared += chunk;
   }
+  spin_unlock(&vmm_lock);
 }
 
 void vmm_install(void) {
@@ -377,9 +385,9 @@ void vmm_install(void) {
 
 void vmm_pagefault(regs_t* r) {
   // okay it might look bad, but let's see if its something we can handle.
+  IRQ_OFF;
   uint64_t fault_addr;
   asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
-
   ASSERT(process_get_current() != NULL);
   ASSERT(process_get_current()->pagemap != NULL);
   ASSERT(r != NULL);
@@ -402,6 +410,7 @@ void vmm_pagefault(regs_t* r) {
       process_get_current()->user_heap_position = page_addr + PAGE_SIZE;
     }
 
+    IRQ_RES;
     return;  // phew ^^;
   }
 
@@ -415,6 +424,7 @@ void vmm_pagefault(regs_t* r) {
     uintptr_t page = (uintptr_t)pmm_allocate();
     vmm_map_page(process_get_current()->pagemap, page_addr, page,
                  PTE_PRESENT | PTE_WRITABLE | PTE_USER);
+    IRQ_RES;
     return;  // phew ^^;
   }
 
@@ -422,6 +432,7 @@ void vmm_pagefault(regs_t* r) {
   if ((r->cs & 0x3) != 0) {
     printf("[vmm] page fault in userspace at address 0x%x, exiting process\n",
            fault_addr);
+    IRQ_RES;
     process_exit(-1);
   }
 

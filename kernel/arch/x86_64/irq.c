@@ -36,35 +36,36 @@ int _pit_handler(regs_t* r) {
 #define INTERRUPT_START() asm volatile("sti")
 
 static volatile int sync_depth = 0;
+static volatile bool sync_was_enabled = false;
 
 void int_disable(void) {
-  INTERRUPT_STOP();
-
   uint64_t flags;
   asm volatile(
       "pushfq\n\t"
       "popq %0\n\t"
+      "cli\n\t"
       : "=r"(flags)
       :
       : "memory");
 
-  if (flags & (1ULL << 9)) {
-    sync_depth = 1;
-  } else {
-    sync_depth++;
+  if (sync_depth == 0) {
+    sync_was_enabled = (flags & (1ULL << 9)) != 0;
   }
+  sync_depth++;
 }
 
 void int_resume(void) {
-  if (sync_depth == 0 || sync_depth == 1) {
+  if (sync_depth == 0) return;
+
+  sync_depth--;
+  if (sync_depth == 0 && sync_was_enabled) {
     INTERRUPT_START();
-  } else {
-    sync_depth--;
   }
 }
 
 void int_enable(void) {
   sync_depth = 0;
+  sync_was_enabled = true;
   INTERRUPT_START();
 }
 
@@ -84,8 +85,6 @@ const char* irq_get_handler(int irq, int chain) {
 
 void irq_install_handler(int irq, irq_handler_chain_t handler,
                          const char* description) {
-  printf("[irq] installing '%s' for irq %d \n", description, irq);
-  INTERRUPT_STOP();
   for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
     if (irq_routines[i * IRQ_CHAIN_SIZE + irq]) {
       continue;
@@ -94,15 +93,6 @@ void irq_install_handler(int irq, irq_handler_chain_t handler,
     _irq_description[i * IRQ_CHAIN_SIZE + irq] = description;
     break;
   }
-  INTERRUPT_START();
-}
-
-void irq_uninstall_handler(int irq) {
-  INTERRUPT_STOP();
-  for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
-    irq_routines[i * IRQ_CHAIN_SIZE + irq] = 0;
-  }
-  INTERRUPT_START();
 }
 
 static void irq_remap(void) {
@@ -154,13 +144,13 @@ void irq_install(void) {
   irq_setup_gates();
 
   // pit - used for scheduling
-  __asm__ __volatile__("cli");
+  IRQ_OFF;
   uint16_t divisor =
       (uint16_t)((PIT_INPUT_HZ + (PIT_TARGET_HZ / 2)) / PIT_TARGET_HZ);
   outb_p(0x43, 0x36);
   outb_p(0x40, (divisor & 0xFF));
   outb_p(0x40, (divisor >> 8));
-  __asm__ __volatile__("sti");
+  IRQ_ON;
 
   irq_install_handler(0, _pit_handler, "pit counter");
   irq_install_handler(0, process_schedule, "process scheduling");
@@ -189,19 +179,13 @@ void print_regs(regs_t* r) {
 }
 
 void irq_handler(regs_t* r) {
-  int_disable();
   if (r->int_no <= 47 && r->int_no >= 32) {
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
       irq_handler_chain_t handler =
           irq_routines[i * IRQ_CHAIN_SIZE + (r->int_no - 32)];
       if (!handler) break;
-      if (handler(r)) {
-        goto done;
-      }
+      if (handler(r)) return;
     }
     irq_ack(r->int_no - 32);
   }
-done:
-
-  int_resume();
 }

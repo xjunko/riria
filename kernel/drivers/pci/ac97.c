@@ -2,6 +2,7 @@
 #include <riria/drivers/ac97.h>
 #include <riria/drivers/pci.h>
 #include <riria/mem.h>
+#include <riria/spinlock.h>
 #include <riria/types.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +14,8 @@
 pci_device_t ac97;
 pci_bar_t nabm;
 pci_bar_t nam;
+
+static spin_lock_t lock = {0};
 
 uint16_t* ptr;
 uint16_t* buf_desc;
@@ -34,7 +37,7 @@ int ac97_can_write(void) {
 
   uint8_t buffer_left;
   if (entry >= read_ptr) {
-    buffer_left = 32 - entry;
+    buffer_left = AC97_BUFFERS - entry;
     if (0 == read_ptr && buffer_left > 0) {
       buffer_left--;
     }
@@ -74,11 +77,12 @@ void ac97_setup_buffer(void) {
 
 int ac97_write_buffer(uint8_t* buf, size_t sz) {
   ASSERT(sz <= AC97_BUFFER_SIZE);
+  spin_lock(&lock);
   uint8_t read_ptr = inb(nabm.addr + 0x10 + 0x4);
   uint8_t buffer_left;
 
   if (entry >= read_ptr) {
-    buffer_left = 32 - entry;
+    buffer_left = AC97_BUFFERS - entry;
     if (read_ptr == 0 && buffer_left > 0) {
       buffer_left--;
     }
@@ -95,8 +99,9 @@ int ac97_write_buffer(uint8_t* buf, size_t sz) {
   memcpy((uint8_t*)buffers[entry].data, buf, sz);
 
   outb(nabm.addr + 0x10 + 0x5, entry);
-  entry = (entry + 1) % 32;
+  entry = (entry + 1) % AC97_BUFFERS;
   ac97_flush();
+  spin_unlock(&lock);
   return 1;
 }
 

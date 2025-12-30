@@ -61,7 +61,7 @@ process_t* process_get_current(void);
 
 void process_spawn_elf(uint8_t*, size_t);
 
-__attribute__((noreturn)) extern void process_switch(uint64_t*, uint64_t*);
+extern void process_switch(uint64_t*, uint64_t*);
 __attribute__((noreturn)) extern void switch_to_user(uint64_t, uint64_t);
 
 void process_kernel_entry(process_entry_t);

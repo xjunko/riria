@@ -21,7 +21,6 @@ void int_enable(void);
 char* get_irq_handler(int, int);
 void irq_install(void);
 void irq_install_handler(int, irq_handler_chain_t, const char*);
-void irq_uninstall_handler(int);
 
 void irq_ack(int);
 void irq_handler(regs_t*);

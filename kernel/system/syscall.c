@@ -106,6 +106,10 @@ int syscall_open(sysregs_t* r) {
   int flags = (int)r->rsi;
   int mode = (int)r->rdx;
 
+#ifdef DEBUG
+  printf("[sys] syscall_open: path=%s flags=0x%x mode=0o%x\n", path, flags,
+         mode);
+#endif
   int ret = vfs_sys_open(path, flags, mode);
   if (ret < 0) {
     ret = -1;
@@ -147,6 +151,7 @@ int syscall_write_fsbase(sysregs_t* r) {
 #ifdef DEBUG
   printf("[sys] syscall_write_fsbase: fsbase=0x%lx\n", fsbase);
 #endif
+
   if (fsbase <= 0x00007FFFFFFFFFFF) {
     printf("[sys] writing fsbase to 0x%lx\n", fsbase);
     wrmsr(MSR_FS_BASE, fsbase);
@@ -170,7 +175,6 @@ int syscall_mmap(sysregs_t* r) {
   // flags - r->r10
   // fd - r->r8
   // offset - r->r9
-  int_disable();
 
   uint64_t fd = r->r8;
   uint64_t offset = r->r9;
@@ -189,10 +193,10 @@ int syscall_mmap(sysregs_t* r) {
       "offset=0x%lx\n",
       heap_start, r->rsi, (uint32_t)r->rdx, (uint32_t)r->r10, (int)r->r8,
       (uint64_t)r->r9);
-#endif
-
   printf("[sys] mmap with fd %d w/ %d pages, offset=0x%lx\n", fd, heap_pages,
          offset);
+#endif
+
   // we handle this by two cases, one with fd and one without
   if ((int)fd != -1) {
     printf("[sys] mmap with fd, using vfs_sys_mmap\n");
@@ -218,6 +222,7 @@ int syscall_mmap(sysregs_t* r) {
   printf("[sys] new heap position: 0x%lx\n", current->user_heap_position);
   printf("[sys] mmap returning address: 0x%lx\n", heap_start);
 #endif
+
   return (int)heap_start;
 }
 
@@ -270,11 +275,11 @@ int syscall_unmap(sysregs_t* r) {
 }
 
 void syscall_handler(sysregs_t* r) {
+  IRQ_OFF;
 #ifdef DEBUG
   printf("[sys] syscall invoked: %d\n", r->rax);
   print_sysregs(r);
 #endif
-
   switch (r->rax) {
     case SYSCALL_EXIT:
       r->rax = syscall_exit(r);
@@ -317,6 +322,10 @@ void syscall_handler(sysregs_t* r) {
       printf("[sys] unknown syscall: %d\n", r->rax);
       break;
   }
+#ifdef DEBUG
+  printf("[sys] syscall completed, return value: %d\n", r->rax);
+#endif
+  IRQ_RES;
 }
 
 //

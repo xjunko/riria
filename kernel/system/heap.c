@@ -39,6 +39,7 @@
 
 #include <riria/boot.h>
 #include <riria/mem.h>
+#include <riria/spinlock.h>
 #include <riria/types.h>
 #include <stdio.h>
 
@@ -48,6 +49,7 @@
 static void* heap_start = NULL;
 static size_t heap_size = 0;
 static heap_block_t* heap_head = NULL;
+static spin_lock_t heap_lock = {0};
 
 int heap_expand_pages(size_t pages) {
   if (pages == 0) return 0;
@@ -135,6 +137,7 @@ void* kmalloc(size_t sz) {
   heap_block_t* prev = NULL;
   heap_block_t* curr = heap_head;
 
+  spin_lock(&heap_lock);
 try_again:
   while (curr) {
     if (curr->size >= total_sz) {
@@ -161,6 +164,7 @@ try_again:
       *size_ptr = curr->size;
 
       void* user_ptr = (void*)((uintptr_t)curr + header_sz);
+      spin_unlock(&heap_lock);
       return user_ptr;
     }
 
@@ -170,6 +174,7 @@ try_again:
 
   if (!heap_expand_pages(16)) {
     if (!heap_expand_pages(1)) {
+      spin_unlock(&heap_lock);
       printf("kmalloc: Out of heap memory (requested %lx bytes)\n", sz);
       panic("out of memory");
     }
@@ -214,6 +219,7 @@ void kfree(void* ptr) {
     panic("alignment error!");
   }
 
+  spin_lock(&heap_lock);
   heap_block_t* prev = NULL;
   heap_block_t* curr = heap_head;
 
@@ -243,4 +249,5 @@ void kfree(void* ptr) {
     prev->size += freed->size;
     prev->next = freed->next;
   }
+  spin_unlock(&heap_lock);
 }

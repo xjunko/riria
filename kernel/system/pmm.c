@@ -40,6 +40,7 @@
 #include <riria/boot.h>
 #include <riria/cpu/irq.h>
 #include <riria/mem.h>
+#include <riria/spinlock.h>
 #include <riria/types.h>
 #include <stdio.h>
 #include <string.h>
@@ -57,6 +58,8 @@ static size_t highest_page = 0;
 static size_t used_pages = 0;
 static size_t free_pages = 0;
 static size_t total_ram_pages = 0;
+
+static spin_lock_t pmm_lock = {0};
 
 void pmm_install(void) {
   printf("[pmm] PMM INIT...");
@@ -162,7 +165,8 @@ void pmm_install(void) {
 }
 
 void* pmm_allocate(void) {
-  int_disable();
+  IRQ_OFF;
+  spin_lock(&pmm_lock);
   for (size_t i = 0; i <= highest_page; ++i) {
     if (!BITMAP_GET(i)) {
       BITMAP_SET(i);
@@ -171,14 +175,14 @@ void* pmm_allocate(void) {
 
       void* phys = (void*)((uintptr_t)i * PAGE_SIZE);
       void* vaddr = (void*)((uintptr_t)phys + VMM_HIGHER_HALF);
-
+      spin_unlock(&pmm_lock);
+      IRQ_RES;
       memset(vaddr, 0, PAGE_SIZE);
-      int_enable();
-
       return phys;
     }
   }
-  int_enable();
+  spin_unlock(&pmm_lock);
+  IRQ_RES;
   panic("out of memory in pmm_allocate!");
   return NULL;
 }
@@ -202,7 +206,11 @@ void pmm_free(void* page) {
     panic("pmm_free called on already free page!");
   }
 
+  IRQ_OFF;
+  spin_lock(&pmm_lock);
   BITMAP_CLEAR(idx);
   used_pages--;
   free_pages++;
+  spin_unlock(&pmm_lock);
+  IRQ_RES;
 }

@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 __attribute__((noreturn)) void panic(const char* message) {
-  int_disable();
+  IRQ_OFF;
   printf("[err] KERNEL PANIC: %s\n", message);
   while (1) asm volatile("hlt");
 }

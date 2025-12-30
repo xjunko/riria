@@ -42,7 +42,7 @@ void run_elf(const char* path) {
 }
 
 void userspace_shell(void) {
-  // run_elf("/init/fb.elf");
-  // run_elf("/init/shell.elf");
-  // run_elf("/init/doomgeneric");
+  run_elf("/init/fb.elf");
+  run_elf("/init/shell.elf");
+  run_elf("/init/doomgeneric");
 }
