@@ -17,7 +17,7 @@ this is a very poor attempt at making an operating system, you should take every
     - exit, open, close, read, write, mmap, unmap, get_thread_id, write_fs_base
     - apparently this is enough to get a DOOM port running, so there's that. 
 - pmm + vmm + paging
-    - pmm, vmm and the paging are mostly based off [Arikoto's](https://codeberg.org/NerdNextDoor/arikoto)
+    - pmm, vmm and the paging are mostly based off [Arikoto's](https://codeberg.org/NerdNextDoor/arikoto), which are then modified to work with this kernel
 - malloc (heap)
     - we have kmalloc, kmalloc_phys and kfree
 - vfs
@@ -43,11 +43,13 @@ this is a very poor attempt at making an operating system, you should take every
     - pipe would be nice to have 
 - multithreading
     - there is no support for multi-core
-- syscalls, lots of syscalls are still not implemented, but basic stuff works mostly fine.
-- process
+- syscalls
+    - lots of syscalls are still not implemented, but basic stuff works mostly fine.
+- scheduling/process
+    - it would be nice to have a multiple list for waiting/ready/reap processes.
     - a lot of the code written was hacked in, i still dont like it.
 - stability
-    - there is some weird bug with userspace shell's `play` command, it detects stack smashing a few seconds in, dunno what it was.  
+    - ~~there is some weird bug with userspace shell's `play` command, it detects stack smashing a few seconds in, dunno what it was.~~ fixed (i think), apparently my IRQ_OFF/RES/ON implementation was wrong and so theres race condition everywhere, userspace seems to be a lot more stable now :D
 
 ### userspace
 - programs
