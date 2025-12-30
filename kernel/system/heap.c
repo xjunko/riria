@@ -185,7 +185,10 @@ void* kmalloc_phys(size_t sz, uintptr_t* phys) {
   void* virt_addr = kmalloc(sz);
   ASSERT(virt_addr != NULL);
   if (phys) {
-    *phys = vmm_virt_to_phys(kernel_pagemap, (uintptr_t)virt_addr);
+    uintptr_t virt_to_phys =
+        vmm_virt_to_phys(kernel_pagemap, (uintptr_t)virt_addr);
+    ASSERT(virt_to_phys != 0);
+    *phys = virt_to_phys;
   }
   return virt_addr;
 }

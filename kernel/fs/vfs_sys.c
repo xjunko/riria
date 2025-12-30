@@ -27,6 +27,11 @@ int vfs_sys_seek(int fd, size_t offset, int whence) {
   return ret;
 }
 
+void* vfs_sys_mmap(int fd, size_t* len, int prot, int flags) {
+  vfs_file_t* file = vfs_get_from_fd(fd);
+  return vfs_mmap(file, len, prot, flags);
+}
+
 int vfs_sys_close(int fd) {
   vfs_file_t* file = vfs_get_from_fd(fd);
   return vfs_close(file);

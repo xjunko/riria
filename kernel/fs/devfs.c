@@ -43,6 +43,17 @@ ssize_t devfs_write(const char* path, const void* buffer, size_t sz) {
   return bytes_written;
 }
 
+void* devfs_mmap(const char* path, size_t* len, int prot, int flags) {
+  if (!path) return NULL;
+  if (!len) return NULL;
+
+  devfs_dev_t* dev = _devfs_find_dev(path);
+  if (!dev) return NULL;
+  if (!dev->mmap) return NULL;
+
+  return dev->mmap(path, len, prot, flags);
+}
+
 bool devfs_exists(const char* path) {
   if (!path) return 0;
 
@@ -52,7 +63,8 @@ bool devfs_exists(const char* path) {
   return 0;
 }
 
-void devfs_register_dev(const char* loc, fs_read read, fs_write write) {
+void devfs_register_dev(const char* loc, fs_read read, fs_write write,
+                        fs_mmap mmap) {
   devfs_dev_t* dev = (devfs_dev_t*)malloc(sizeof(devfs_dev_t));
   if (!dev) {
     printf("[devfs] failed to allocate memory for device %s\n", loc);
@@ -62,6 +74,7 @@ void devfs_register_dev(const char* loc, fs_read read, fs_write write) {
   dev->loc = loc;
   dev->read = read;
   dev->write = write;
+  dev->mmap = mmap;
   dev->next = NULL;
 
   if (!head) {
@@ -81,10 +94,12 @@ void devfs_init(vfs_impl_t* impl) {
   impl->exists = devfs_exists;
   impl->seek = NULL;
   impl->stat = NULL;
+  impl->mmap = devfs_mmap;
 
   devfs_zero_install();
   devfs_stdout_install();
   devfs_audio_install();
   devfs_keyboard_install();
+  devfs_framebuffer_install();
   printf(" OK, ");
 }

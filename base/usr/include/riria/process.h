@@ -4,6 +4,7 @@
 #include <riria/types.h>
 
 #define STACK_SIZE 0x00010000
+
 #define USER_STACK_TOP 0xB0000000
 #define USER_STACK_BASE 0xAFF00000
 

@@ -9,7 +9,7 @@ LD    = $(TOOLCHAIN)/$(ARCH)-$(OS)-gcc
 STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 
 EMU       = qemu-system-x86_64
-EMU_ARGS  = -cpu host -machine q35,accel=kvm -smp 1 -m 128M -vga virtio
+EMU_ARGS  = -cpu host -machine q35,accel=kvm -smp 1 -m 256M -vga virtio
 EMU_ARGS += -serial stdio -no-reboot -no-shutdown \
             -audio driver=sdl,model=ac97,id=0
 			

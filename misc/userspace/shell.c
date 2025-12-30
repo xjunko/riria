@@ -1,14 +1,44 @@
+#include <fcntl.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 
 #define PCM_BUFFER 128000
+
+int cat(const char* args) {
+  const char* path = args;
+  if (!path) {
+    printf("no path specified.");
+    return -1;
+  }
+
+  char path_to_file[256] = "/init/";
+  strcat(path_to_file, path);
+
+  FILE* f = fopen(path_to_file, "r");
+  if (!f) {
+    printf("failed to open %s\n", path_to_file);
+    return -1;
+  }
+
+  char buffer[512];
+  size_t bytes_read;
+
+  while ((bytes_read = fread(buffer, 1, sizeof(buffer), f)) > 0) {
+    fwrite(buffer, 1, bytes_read, stdout);
+  }
+
+  fclose(f);
+  return 0;
+}
 
 int play_pcm(const char* args) {
   const char* path = args;
   if (!path) printf("no path specified.");
 
-  char path_to_mus[256] = "/init/";
+  char path_to_mus[256] = "/init/audio/";
   strcat(path_to_mus, path);
 
   printf("playing %s\n", path_to_mus);
@@ -54,31 +84,25 @@ int play_pcm(const char* args) {
   return 0;
 }
 
-int cat(const char* args) {
-  const char* path = args;
-  if (!path) {
-    printf("no path specified.");
-    return -1;
+int stress_test(void) {
+  printf("starting memory stress test...\n");
+  const size_t alloc_size = 10 * 1024 * 1024;  // 10 MB
+  const int iterations = 10;
+
+  for (int i = 0; i < iterations; i++) {
+    printf("allocation %d/%d: allocating %zu bytes...\n", i + 1, iterations,
+           alloc_size);
+    void* ptr = malloc(alloc_size);
+    if (!ptr) {
+      printf("allocation failed!\n");
+      return -1;
+    }
+    memset(ptr, 0xAA, alloc_size);  // touch the memory
+    printf("allocation %d/%d: freeing memory...\n", i + 1, iterations);
+    free(ptr);
   }
 
-  char path_to_file[256] = "/init/";
-  strcat(path_to_file, path);
-
-  FILE* f = fopen(path_to_file, "r");
-  if (!f) {
-    printf("failed to open %s\n", path_to_file);
-    return -1;
-  }
-
-  char buffer[512];
-  size_t bytes_read;
-
-  while ((bytes_read = fread(buffer, 1, sizeof(buffer), f)) > 0) {
-    fwrite(buffer, 1, bytes_read, stdout);
-  }
-  printf("\n");
-
-  fclose(f);
+  printf("memory stress test completed successfully.\n");
   return 0;
 }
 
@@ -94,6 +118,10 @@ void exec(const char* arg) {
 
   if (strcmp(cmd, "play") == 0) {
     play_pcm(args);
+  }
+
+  if (strcmp(cmd, "stress") == 0) {
+    stress_test();
   }
 }
 

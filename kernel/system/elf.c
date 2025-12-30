@@ -25,6 +25,10 @@ elf_info_t elf64_load(pagemap_t* pagemap, uint8_t* elf_data, size_t len) {
     panic("not amd64\n");
   }
 
+  if (header->phentsize != sizeof(elf64_phdr_t)) {
+    panic("invalid phentsize\n");
+  }
+
   uint64_t ph_offset = header->phoff;
   uint64_t ph_size = header->phentsize;
   uint16_t ph_count = header->phnum;
@@ -67,6 +71,11 @@ elf_info_t elf64_load(pagemap_t* pagemap, uint8_t* elf_data, size_t len) {
 
     uintptr_t addr = start_page;
     while (addr < end_page) {
+      uintptr_t exiting_phys = vmm_virt_to_phys(pagemap, addr);
+      if (exiting_phys != 0) {
+        panic("elf64_load: virtual address already mapped!\n");
+      }
+
       uintptr_t page = (uintptr_t)pmm_allocate();
       ASSERT(page);
       vmm_map_page(pagemap, addr, page, flags);

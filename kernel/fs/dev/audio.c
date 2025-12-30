@@ -16,5 +16,5 @@ ssize_t _audio_write(const char* path, const void* buffer, size_t sz) {
 }
 
 void devfs_audio_install(void) {
-  devfs_register_dev("/audio", NULL, _audio_write);
+  devfs_register_dev("/audio", NULL, _audio_write, NULL);
 }

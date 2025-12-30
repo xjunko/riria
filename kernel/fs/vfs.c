@@ -126,6 +126,17 @@ int vfs_exists(vfs_file_t* file) {
   return file->fs->impl->exists(file->loc) ? 1 : 0;
 }
 
+void* vfs_mmap(vfs_file_t* file, size_t* len, int prot, int flags) {
+  if (!file) return NULL;
+  if (!file->loc) return NULL;
+  if (!file->fs) return NULL;
+  if (!file->fs->impl) return NULL;
+  if (!file->fs->impl->mmap) return NULL;
+
+  const char* loc_wo_mnt = file->loc + strlen(file->fs->mnt) - 1;
+  return file->fs->impl->mmap(loc_wo_mnt, len, prot, flags);
+}
+
 int vfs_close(vfs_file_t* file) {
   if (!file) return -1;
   if (file->id < 0 || file->id >= VFS_MAX_FILE_DESCRIPTORS ||

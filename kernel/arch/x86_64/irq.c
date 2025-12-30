@@ -20,6 +20,17 @@
 #define ICW1_INIT 0x10
 #define ICW1_ICW4 0x01
 
+#define PIT_INPUT_HZ 1193182
+#define PIT_TARGET_HZ 1000
+
+// pit
+int ticks = 0;
+int _pit_handler(regs_t* r) {
+  UNUSED(r);
+  ticks++;
+  return 0;
+}
+
 // interrups
 #define INTERRUPT_STOP() asm volatile("cli")
 #define INTERRUPT_START() asm volatile("sti")
@@ -143,13 +154,17 @@ void irq_install(void) {
   irq_setup_gates();
 
   // pit - used for scheduling
-  // HACK: directly set PIT to be 250HZ
-  uint16_t divisor = 250 / 1193182;
-  outb(0x43, 0x36);
-  outb(0x40, (uint8_t)(divisor & 0xFF));
-  outb(0x40, (uint8_t)((divisor >> 8) & 0xFF));
+  __asm__ __volatile__("cli");
+  uint16_t divisor =
+      (uint16_t)((PIT_INPUT_HZ + (PIT_TARGET_HZ / 2)) / PIT_TARGET_HZ);
+  outb_p(0x43, 0x36);
+  outb_p(0x40, (divisor & 0xFF));
+  outb_p(0x40, (divisor >> 8));
+  __asm__ __volatile__("sti");
 
+  irq_install_handler(0, _pit_handler, "pit counter");
   irq_install_handler(0, process_schedule, "process scheduling");
+
   printf(" OK!\n");
 }
 

@@ -12,6 +12,8 @@
 typedef void (*irq_handler_t)(regs_t*);
 typedef int (*irq_handler_chain_t)(regs_t*);
 
+extern int ticks;
+
 void int_disable(void);
 void int_resume(void);
 void int_enable(void);

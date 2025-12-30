@@ -7,7 +7,10 @@ uint64_t __stack_chk_guard = 0x17701369420BABE;
 // clang-format off
 __attribute__((noreturn)) 
 void __stack_chk_fail(void) {
-  panic("stack smashing detected");
+    void* rip = __builtin_return_address(0);
+    printf("==========================\n");
+    printf("happens at RIP=%p\n", rip);
+    panic("stack smashing detected");
 }
 
 __attribute__((no_sanitize("undefined")))

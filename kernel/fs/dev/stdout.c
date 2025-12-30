@@ -20,5 +20,5 @@ ssize_t _stdout_write(const char* path, const void* buffer, size_t sz) {
 }
 
 void devfs_stdout_install(void) {
-  devfs_register_dev("/stdout", _stdout_read, _stdout_write);
+  devfs_register_dev("/stdout", _stdout_read, _stdout_write, NULL);
 }

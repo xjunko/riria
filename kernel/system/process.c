@@ -2,6 +2,7 @@
 #include <riria/cpu/msr.h>
 #include <riria/cpu/regs.h>
 #include <riria/cpu/tss.h>
+#include <riria/drivers/framebuffer.h>
 #include <riria/elf.h>
 #include <riria/mem.h>
 #include <riria/process.h>
@@ -140,27 +141,35 @@ void process_spawn_elf(uint8_t* elf_data, size_t len) {
   uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
   elf_info_t elf = elf64_load(pagemap, elf_data, len);
 
-  uintptr_t user_heap = elf.base + elf.size;
-  user_heap = (user_heap + 0xFFF) & ~0xFFF;
-  printf("[prc] elf heap starts at %p\n", (void*)user_heap);
-  uintptr_t heap_page = (uintptr_t)pmm_allocate();
-  vmm_map_page(pagemap, user_heap, heap_page, flags);
-  printf("[prc] user heap mapped at %p\n", (void*)user_heap);
-
-  uintptr_t stack_top = USER_STACK_TOP;
-  uintptr_t stack_base = USER_STACK_BASE;
-
-  for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
-    uintptr_t page = (uintptr_t)pmm_allocate();
-    vmm_map_page(pagemap, i, page, flags);
+  uintptr_t user_heap = elf.entry + elf.size;
+  // setup the user heap
+  {
+    user_heap = (user_heap + 0xFFF) & ~0xFFF;
+    printf("[prc] elf heap starts at %p\n", (void*)user_heap);
+    uintptr_t heap_page = (uintptr_t)pmm_allocate();
+    vmm_map_page(pagemap, user_heap, heap_page, flags);
+    printf("[prc] user heap mapped at %p\n", (void*)user_heap);
   }
 
-  uint64_t* stack = (uint64_t*)stack_top;
-  PUSH_STACK(stack, 0);  // alignment
-  PUSH_STACK(stack, 0);  // envp
-  PUSH_STACK(stack, 0);  // argp
-  PUSH_STACK(stack, 0);  // argc
-  stack_top = (uintptr_t)stack;
+  // setup the user stack
+  uintptr_t stack_top = USER_STACK_TOP;
+  uintptr_t stack_base = USER_STACK_BASE;
+  {
+    printf("[prc] setting up user stack at [%p - %p]\n", (void*)stack_base,
+           (void*)stack_top);
+
+    uint64_t* stack = (uint64_t*)stack_top;
+    PUSH_STACK(stack, 0);  // alignment
+    PUSH_STACK(stack, 0);  // envp
+    PUSH_STACK(stack, 0);  // argp
+    PUSH_STACK(stack, 0);  // argc
+    stack_top = (uintptr_t)stack;
+
+    for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
+      uintptr_t page = (uintptr_t)pmm_allocate();
+      vmm_map_page(pagemap, i, page, flags);
+    }
+  }
 
   process_create_user((process_entry_t)elf.entry, pagemap, stack_top,
                       user_heap);
@@ -210,7 +219,11 @@ int process_schedule(regs_t* r) {
   int_disable();
   irq_ack(0);
 
-  if (!should_schedule || !process_head || !process_head->next) goto cleanup;
+  // a very long, just in case if stmt...
+  if (!should_schedule || !process_head || !process_head->next ||
+      !process_head->process->pagemap || !process_head->next->process->pagemap)
+    goto cleanup;
+
   process_reap();
 
   process_t* prev_proc = process_head->process;

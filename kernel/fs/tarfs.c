@@ -77,14 +77,14 @@ ssize_t tarfs_read(const char* path, void* buffer, size_t sz) {
       tarfs_file_t* file = _tarfs_find_file(tar_path + 1);
       ASSERT(file);
 
-      // HACK: oooh spooky
-      if (file->seek_pos != 0) {
-        file_size -= file->seek_pos;
-        ptr += 512 + file->seek_pos;
+      size_t seek_pos = file->seek_pos;
+      if (seek_pos > (size_t)file_size) {
+        return 0;
       }
 
-      unsigned char* data = ptr + 512;
-      size_t bytes_to_read = (file_size < (int)sz) ? file_size : (int)sz;
+      unsigned char* data = ptr + 512 + seek_pos;
+      size_t remaining = (size_t)file_size - seek_pos;
+      size_t bytes_to_read = remaining < sz ? remaining : sz;
 
       for (size_t i = 0; i < bytes_to_read; i++) {
         ((unsigned char*)buffer)[i] = data[i];

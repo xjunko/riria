@@ -16,5 +16,5 @@ ssize_t _zero_write(const char* path, const void* buffer, size_t sz) {
 }
 
 void devfs_zero_install(void) {
-  devfs_register_dev("/zero", _zero_read, _zero_write);
+  devfs_register_dev("/zero", _zero_read, _zero_write, NULL);
 }

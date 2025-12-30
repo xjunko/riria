@@ -16,9 +16,7 @@ OBJCOPY=x86_64-riria-objcopy
 
 $CC "$SRC" -o "$BASENAME.elf"
 
-$OBJCOPY -O binary "$BASENAME.elf" "$BASENAME.bin"
 
 mkdir -p ../initramfs
-mv "$BASENAME.bin" ../initramfs/
 mv "$BASENAME.elf" ../initramfs/
 

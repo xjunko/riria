@@ -1,3 +1,4 @@
+#include <riria/cpu/irq.h>
 #include <riria/cpu/isr.h>
 #include <riria/cpu/msr.h>
 #include <riria/cpu/regs.h>
@@ -139,43 +140,7 @@ int syscall_seek(sysregs_t* r) {
   return ret;
 }
 
-#define SYSCALL_GET_THREAD_ID 30
-int syscall_get_thread_id(sysregs_t* r) {
-  UNUSED(r);
-  return process_get_current()->id;
-}
-
-#define SYSCALL_MMAP 31
-int syscall_mmap(sysregs_t* r) {
-  process_t* current = process_get_current();
-
-  // Align current heap position to page
-  uintptr_t heap_start =
-      (current->user_heap_position + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
-
-  r->rax = heap_start;  // return old heap start
-
-  // Round up requested size to page multiple
-  uint32_t heap_pages = ALIGN_UP(r->rdi, PAGE_SIZE) / PAGE_SIZE;
-
-  for (uint32_t i = 0; i < heap_pages; i++) {
-    uintptr_t page = (uintptr_t)pmm_allocate();
-    if (!page) {
-      panic("Out of physical memory in mmap!\n");
-    }
-
-    vmm_map_page(current->pagemap, heap_start, page,
-                 PTE_PRESENT | PTE_USER | PTE_WRITABLE);
-    heap_start += PAGE_SIZE;
-  }
-
-  current->user_heap_position = heap_start;
-
-  printf("[sys] new heap position: 0x%lx\n", current->user_heap_position);
-  return r->rax;
-}
-
-#define SYSCALL_WRITEFSBASE 32
+#define SYSCALL_WRITEFSBASE 29
 int syscall_write_fsbase(sysregs_t* r) {
   uint64_t fsbase = r->rdi;
 
@@ -189,6 +154,119 @@ int syscall_write_fsbase(sysregs_t* r) {
   }
 
   return -1;
+}
+
+#define SYSCALL_GET_THREAD_ID 30
+int syscall_get_thread_id(sysregs_t* r) {
+  UNUSED(r);
+  return process_get_current()->id;
+}
+
+#define SYSCALL_MMAP 31
+int syscall_mmap(sysregs_t* r) {
+  // start - r->rdi
+  // size - r->rsi
+  // prot - r->rdx
+  // flags - r->r10
+  // fd - r->r8
+  // offset - r->r9
+  int_disable();
+
+  uint64_t fd = r->r8;
+  uint64_t offset = r->r9;
+  uint64_t flags = r->r10;
+  size_t size = r->rsi;
+
+  process_t* current = process_get_current();
+  uintptr_t heap_start = current->user_heap_position;
+  uint32_t heap_pages = ALIGN_UP(r->rsi, PAGE_SIZE) / PAGE_SIZE;
+
+#ifdef DEBUG
+  printf("[sys] process %d heap position: 0x%lx\n", current->id,
+         current->user_heap_position);
+  printf(
+      "[sys] syscall_mmap: start=0x%lx size=0x%lx prot=0x%x flags=0x%x fd=%d "
+      "offset=0x%lx\n",
+      heap_start, r->rsi, (uint32_t)r->rdx, (uint32_t)r->r10, (int)r->r8,
+      (uint64_t)r->r9);
+#endif
+
+  printf("[sys] mmap with fd %d w/ %d pages, offset=0x%lx\n", fd, heap_pages,
+         offset);
+  // we handle this by two cases, one with fd and one without
+  if ((int)fd != -1) {
+    printf("[sys] mmap with fd, using vfs_sys_mmap\n");
+    uint64_t data = (uint64_t)vfs_sys_mmap(fd, &size, flags, offset);
+    ASSERT(data != 0);
+    for (uint32_t i = 0; i < heap_pages; i++) {
+      vmm_map_page(current->pagemap, current->user_heap_position, data,
+                   PTE_PRESENT | PTE_USER | PTE_WRITABLE);
+      data += PAGE_SIZE;
+      current->user_heap_position += PAGE_SIZE;
+    }
+  } else {
+    for (uint32_t i = 0; i < heap_pages; i++) {
+      uintptr_t page = (uintptr_t)pmm_allocate();
+      ASSERT(page != 0);
+      vmm_map_page(current->pagemap, current->user_heap_position, page,
+                   PTE_PRESENT | PTE_USER | PTE_WRITABLE | PTE_NX);
+      current->user_heap_position += PAGE_SIZE;
+    }
+  }
+
+#ifdef DEBUG
+  printf("[sys] new heap position: 0x%lx\n", current->user_heap_position);
+  printf("[sys] mmap returning address: 0x%lx\n", heap_start);
+#endif
+  return (int)heap_start;
+}
+
+#define SYSCALL_UNMAP 32
+int syscall_unmap(sysregs_t* r) {
+  process_t* current = process_get_current();
+  uintptr_t addr = r->rdi;
+  uintptr_t base = addr & ~(PAGE_SIZE - 1);
+  size_t size = r->rsi;
+  size_t pages = ALIGN_UP(size, PAGE_SIZE) / PAGE_SIZE;
+
+  if (addr < process_get_current()->user_heap_start) {
+    panic("WTF");
+    printf(
+        "[sys] syscall_unmap: invalid address 0x%lx below heap start 0x%lx\n",
+        addr, process_get_current()->user_heap_start);
+
+    return -1;
+  }
+
+  if (addr + size > current->user_heap_position) {
+    panic("WTF");
+    printf(
+        "[sys] syscall_unmap: invalid address 0x%lx + size 0x%lx above "
+        "heap position 0x%lx\n",
+        addr, size, process_get_current()->user_heap_position);
+
+    return -1;
+  }
+
+#ifdef DEBUG
+  printf("[sys] syscall_unmap: addr=0x%lx size=0x%lx pages=%d\n", addr, size,
+         pages);
+#endif
+
+  for (uint32_t i = 0; i < pages; i++) {
+    uintptr_t virt = base + i * PAGE_SIZE;
+    uintptr_t phys = vmm_virt_to_phys(current->pagemap, virt);
+    ASSERT(phys != 0);
+
+    pmm_free((void*)phys);
+    vmm_unmap_page(current->pagemap, virt);
+  }
+
+#ifdef DEBUG
+  printf("[sys] unmap completed\n");
+#endif
+
+  return 0;
 }
 
 void syscall_handler(sysregs_t* r) {
@@ -219,14 +297,20 @@ void syscall_handler(sysregs_t* r) {
     case SYSCALL_SEEK:
       r->rax = syscall_seek(r);
       break;
+    case SYSCALL_WRITEFSBASE:
+      r->rax = syscall_write_fsbase(r);
+      break;
     case SYSCALL_GET_THREAD_ID:
       r->rax = syscall_get_thread_id(r);
       break;
     case SYSCALL_MMAP:
       r->rax = syscall_mmap(r);
       break;
-    case SYSCALL_WRITEFSBASE:
-      r->rax = syscall_write_fsbase(r);
+    case SYSCALL_UNMAP:
+      r->rax = syscall_unmap(r);
+      break;
+    case 77:
+      r->rax = ticks;
       break;
     default:
       r->rax = -1;

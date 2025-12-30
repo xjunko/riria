@@ -72,8 +72,8 @@ pagemap_t* vmm_new_pagemap(void) {
   }
 
   uint64_t* pml4_virt = (uint64_t*)((uintptr_t)pml4_phys + VMM_HIGHER_HALF);
-  memcpy(pml4_virt, kernel_pagemap->base_virt, PAGE_SIZE);
   memset(pml4_virt, 0, PAGE_SIZE / 2);
+  memcpy(pml4_virt + 256, kernel_pagemap->base_virt + 256, PAGE_SIZE / 2);
 
   pagemap_t* new_pagemap = malloc(sizeof(pagemap_t));
   new_pagemap->base_virt = pml4_virt;
@@ -123,8 +123,6 @@ uint64_t* vmm_get_next_level(uint64_t* current_level_virt, size_t idx,
 
 bool vmm_map_page(pagemap_t* pagemap, uintptr_t virt, uintptr_t phys,
                   uint64_t flags) {
-  int_disable();
-
   virt &= ~(PAGE_SIZE - 1);
   phys &= ~(PAGE_SIZE - 1);
 
@@ -145,14 +143,14 @@ bool vmm_map_page(pagemap_t* pagemap, uintptr_t virt, uintptr_t phys,
   uint64_t* pt = vmm_get_next_level(pd, pd_idx, true, alloc_flags);
   if (!pt) goto fail;
 
+  int_disable();
   pt[pt_idx] = phys | flags | PTE_PRESENT;
   vmm_invalidate_page(virt);
-
   int_enable();
+
   return true;
 
 fail:
-  int_enable();
   printf("failed to map page for virt=0x%x", virt);
   panic("vmm_map_page failure");
   return false;
@@ -190,6 +188,7 @@ bool vmm_unmap_page(pagemap_t* pagemap, uintptr_t virt) {
     return true;
   }
 
+  int_disable();
   // null out the page table entry
   pt[pt_idx] = 0;
   vmm_invalidate_page(virt);
@@ -211,7 +210,7 @@ bool vmm_unmap_page(pagemap_t* pagemap, uintptr_t virt) {
       // if pdpt is empty, empty it
       if (vmm_is_table_empty(pdpt)) {
         if (pml4_idx >= 256) {
-          return true;
+          goto cleanup;
         }
         pml4[pml4_idx] = 0;
         uintptr_t pdpt_phys = PTE_GET_ADDR(pdpt_entry);
@@ -220,6 +219,8 @@ bool vmm_unmap_page(pagemap_t* pagemap, uintptr_t virt) {
     }
   }
 
+cleanup:
+  int_enable();
   return true;
 }
 
@@ -231,15 +232,15 @@ uintptr_t vmm_virt_to_phys(pagemap_t* pagemap, uintptr_t virt) {
 
   uint64_t* pml4 = pagemap->base_virt;
   uint64_t* pdpt = vmm_get_next_level(pml4, pml4_idx, false, 0);
-  if (pdpt == NULL) return (uintptr_t)-1;
+  if (pdpt == NULL) return (uintptr_t)0;
   uint64_t* pd = vmm_get_next_level(pdpt, pdpt_idx, false, 0);
-  if (pd == NULL) return (uintptr_t)-1;
+  if (pd == NULL) return (uintptr_t)0;
   uint64_t* pt = vmm_get_next_level(pd, pd_idx, false, 0);
-  if (pt == NULL) return (uintptr_t)-1;
+  if (pt == NULL) return (uintptr_t)0;
 
   uint64_t entry = pt[pt_idx];
 
-  if (!(entry & PTE_PRESENT)) return (uintptr_t)-1;
+  if (!(entry & PTE_PRESENT)) return (uintptr_t)0;
 
   uintptr_t phys = PTE_GET_ADDR(entry);
   uintptr_t offset = virt % PAGE_SIZE;
@@ -300,10 +301,6 @@ void vmm_install(void) {
   static pagemap_t new_pagemap;
   kernel_pagemap = &new_pagemap;
   kernel_pagemap->base_virt = pml4_virt;
-
-  for (int i = 0; i < 512; i++) {
-    vmm_get_next_level(pml4_virt, i, true, PTE_DUMMY);
-  }
 
   struct limine_executable_address_response* kaddr =
       executable_address_request.response;
@@ -383,10 +380,16 @@ void vmm_pagefault(regs_t* r) {
   uint64_t fault_addr;
   asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
 
+  ASSERT(process_get_current() != NULL);
+  ASSERT(process_get_current()->pagemap != NULL);
+  ASSERT(r != NULL);
+
   // heap
   // HACK: stupid hack
   if (fault_addr >= process_get_current()->user_heap_start &&
       fault_addr < process_get_current()->user_heap_position + PAGE_SIZE) {
+    printf("[vmm] heap start at 0x%x\n",
+           process_get_current()->user_heap_start);
     printf(
         "[vmm] page fault in userspace at address 0x%x, allocating heap page\n",
         fault_addr);

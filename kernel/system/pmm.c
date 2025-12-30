@@ -73,9 +73,11 @@ void pmm_install(void) {
   }
   printf(", highest_address=0x%lx", highest_address);
 
-  highest_page = highest_address / PAGE_SIZE;
+  highest_page = (highest_address - 1) / PAGE_SIZE;
   size_t max_bitmap_pages = PMM_BITMAP_SIZE * 8;
   if (highest_page >= max_bitmap_pages) {
+    printf(", limiting highest_page from %lu to max supported %lu pages",
+           highest_page, max_bitmap_pages);
     highest_page = max_bitmap_pages - 1;
   }
   memset(bitmap, 0xFF, PMM_BITMAP_SIZE);
@@ -161,7 +163,7 @@ void pmm_install(void) {
 
 void* pmm_allocate(void) {
   int_disable();
-  for (size_t i = 0; i < highest_page; ++i) {
+  for (size_t i = 0; i <= highest_page; ++i) {
     if (!BITMAP_GET(i)) {
       BITMAP_SET(i);
       used_pages++;
