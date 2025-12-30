@@ -53,7 +53,9 @@ this is a very poor attempt at making an operating system, you should take every
 - programs
     - it would be nice to have more stuff ported in to the userspace, maybe one day we will have a desktop enviroment :D (a wm would be cool)
 - process
-    - forking 
+    - forking
+ 
+... and thousand other stuff that i don't remember and know yet.
 
 ### license:
 ISC License
