@@ -24,7 +24,7 @@ void* _framebuffer_mmap(const char* path, size_t* len, int prot, int flags) {
   }
 
   *len = fb->pitch * fb->height;
-  uint64_t phys_addr = (uint64_t)fb->buffer - hhdm_request.response->offset;
+  uint64_t phys_addr = (uint64_t)fb->addr - hhdm_request.response->offset;
   return (void*)phys_addr;
 }
 

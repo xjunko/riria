@@ -17,7 +17,6 @@ void framebuffer_install(void) {
 
   struct limine_framebuffer* fb = framebuffer_request.response->framebuffers[0];
   fb_info.addr = fb->address;
-  fb_info.buffer = fb->address;
 
   fb_info.width = (uint32_t)fb->width;
   fb_info.height = (uint32_t)fb->height;
