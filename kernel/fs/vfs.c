@@ -150,7 +150,7 @@ int vfs_close(vfs_file_t* file) {
 }
 
 void vfs_install(void) {
-  printf("[vfs] VFS INIT...");
+  printf(DEBUG "[   vfs] VFS INIT...");
   vfs_impl_t* devfs = malloc(sizeof(vfs_impl_t));
   mountpoints[0].mnt = "/dev/";
   mountpoints[0].impl = devfs;
@@ -161,5 +161,5 @@ void vfs_install(void) {
   mountpoints[1].impl = tarfs;
   tarfs_init(tarfs);
 
-  printf("ALL OK!\n");
+  printf(GREEN ", ALL OK!\n");
 }

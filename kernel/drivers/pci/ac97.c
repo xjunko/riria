@@ -143,9 +143,14 @@ void ac97_set_volume(int volume) {
 
 // https://github.com/elttil/sbOS/blob/master/kernel/drivers/ac97.c#L161
 void ac97_install(void) {
-  printf("[ac97] INIT...");
+  printf(DEBUG "[  ac97] INIT...");
 
+  // NOTE: yes not everyone has ac97 these days...
   if (!pci_populate_device(0x8086, 0x2415, &ac97)) {
+    printf(ERROR " FAILED, DEVICE NOT FOUND!\n");
+    printf(
+        WARNING
+        "[  ac97] audio driver failed to install, /dev/audio will not work\n");
     UNREACHABLE();
   }
 
@@ -170,14 +175,14 @@ void ac97_install(void) {
     Control register if you do not want to use interrupts, or 0x3 if you
     want to use interrupts.
   */
-  printf(", POWER");
+  printf(GREEN ", POWER");
   outb_w(nabm.addr + 0x2C, (1 << 1));
 
   /*
     After this, you should write any value to NAM
     Reset register to reset all NAM registers.
   */
-  printf(", RESET");
+  printf(GREEN ", RESET");
   outb_w(nam.addr, 0x1);
 
   /*
@@ -187,7 +192,7 @@ void ac97_install(void) {
     Capabilites register and value in AUX Output to find out if this sound
     card support headhone output.
   */
-  printf(", CAPABILITIES");
+  printf(GREEN ", CAPABILITIES");
   outb_w(nam.addr + 0x2C, 48000);
   outb_w(nam.addr + 0x2E, 48000);
   outb_w(nam.addr + 0x30, 48000);
@@ -198,7 +203,7 @@ void ac97_install(void) {
     PCM Output by writing value 0 to this register. Now sound card is
     ready to use.
   */
-  printf(", VOLUME");
+  printf(GREEN ", VOLUME");
   ac97_set_volume(50);
 
   // playing sound
@@ -211,22 +216,22 @@ void ac97_install(void) {
   s |= (1 << 1);
   outb(nabm.addr + 0x10 + 0xB, s);
 
-  printf(", WAITING");
+  printf(GREEN ", WAITING");
   for (; inb(nabm.addr + 0x10 + 0xB) & (1 << 1);)
     ;
 
-  printf(", BUFFER");
+  printf(GREEN ", BUFFER");
   ac97_setup_buffer();
 
   // Write physical position of BDL to Buffer Descriptor Base Address
   // register (NABM register 0x10)
-  printf(", BDL ADDR");
+  printf(GREEN ", BDL ADDR");
   outb_l(nabm.addr + 0x10, (uint32_t)(uintptr_t)phys_buf_desc);
 
-  printf(", START");
+  printf(GREEN ", START");
   uint8_t control = inb(nabm.addr + 0x10 + 0xB);
   control |= (1 << 0);
   outb(nabm.addr + 0x10 + 0xB, control);
 
-  printf(", OK!\n");
+  printf(GREEN ", OK!\n");
 }

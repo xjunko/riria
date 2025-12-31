@@ -9,32 +9,32 @@
 void run_elf(const char* path) {
   vfs_file_t* elf_file = vfs_open(path, 0, 0);
   if (!elf_file) {
-    printf("failed: open \n");
+    printf(ERROR "failed: open \n");
     return;
   }
 
   vfs_file_stat_t stat;
   int res = vfs_stat(elf_file, &stat);
   if (res < 0) {
-    printf("failed: stat");
+    printf(ERROR "failed: stat");
     return;
   }
 
   void* buf = malloc(stat.size);
   if (!buf) {
-    printf("failed: malloc");
+    printf(ERROR "failed: malloc");
     return;
   }
 
   int bytes_read = vfs_read(elf_file, buf, stat.size);
   if (bytes_read < 0) {
-    printf("failed: read \n");
+    printf(ERROR "failed: read \n");
     return;
   }
 
   int ret = vfs_close(elf_file);
   if (ret < 0) {
-    printf("failed: close \n");
+    printf(ERROR "failed: close \n");
     return;
   }
 

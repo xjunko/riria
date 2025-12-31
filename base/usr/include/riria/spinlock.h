@@ -9,13 +9,13 @@ typedef volatile struct spin_lock {
 static inline void _spin_lock(spin_lock_t* lock, const char* func,
                               const char* file, int line) {
   while (__sync_lock_test_and_set(&lock->latch, 1)) {
-    printf("[lck] spinlock busy at %s:%d, held by %s\n", file, line,
+    printf(WARNING "[  lock] spinlock busy at %s:%d, held by %s\n", file, line,
            lock->func ? lock->func : "unknown");
     asm volatile("pause");
   }
   lock->func = func;
-#ifdef DEBUG
-  printf("[lck] spinlock acquired at %s:%d\n", file, line);
+#ifdef KDEBUG
+  printf(INFO "[  lock] spinlock acquired at %s:%d\n", file, line);
 #else
   UNUSED(file);
   UNUSED(line);
@@ -24,8 +24,8 @@ static inline void _spin_lock(spin_lock_t* lock, const char* func,
 
 static inline void _spin_unlock(spin_lock_t* lock, const char* file, int line) {
   lock->func = NULL;
-#ifdef DEBUG
-  printf("[lck] spinlock released at %s:%d\n", file, line);
+#ifdef KDEBUG
+  printf(INFO "[  lock] spinlock released at %s:%d\n", file, line);
 #else
   UNUSED(file);
   UNUSED(line);

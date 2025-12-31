@@ -1,6 +1,7 @@
 #pragma once
 // it gets old having to include the same damn thing everytime, lets have it all
 // in one place
+#include <riria/tty.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -23,13 +24,13 @@ typedef int64_t ssize_t;
 
 #define UNUSED(x) (void)(x)
 
-#define ASSERT(cond)                                               \
-  do {                                                             \
-    if (!(cond)) {                                                 \
-      printf("[err] Assertion failed: %s\n", #cond);               \
-      printf("[err] In file: %s, line: %d\n", __FILE__, __LINE__); \
-      panic("Assertion failure");                                  \
-    }                                                              \
+#define ASSERT(cond)                                                        \
+  do {                                                                      \
+    if (!(cond)) {                                                          \
+      printf(ERROR "[ error] Assertion failed: %s\n", #cond);               \
+      printf(ERROR "[ error] In file: %s, line: %d\n", __FILE__, __LINE__); \
+      panic("Assertion failure");                                           \
+    }                                                                       \
   } while (0)
 
 #define UNREACHABLE() ASSERT(0)

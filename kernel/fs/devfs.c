@@ -67,7 +67,7 @@ void devfs_register_dev(const char* loc, fs_read read, fs_write write,
                         fs_mmap mmap) {
   devfs_dev_t* dev = (devfs_dev_t*)malloc(sizeof(devfs_dev_t));
   if (!dev) {
-    printf("[devfs] failed to allocate memory for device %s\n", loc);
+    printf(ERROR "[ devfs] failed to allocate memory for device %s\n", loc);
     return;
   }
 
@@ -84,11 +84,11 @@ void devfs_register_dev(const char* loc, fs_read read, fs_write write,
     tail->next = dev;
     tail = dev;
   }
-  printf(", new_dev=%s", loc);
+  printf(YELLOW ", new_dev=%s", loc);
 }
 
 void devfs_init(vfs_impl_t* impl) {
-  printf(", devfs INIT");
+  printf(YELLOW ", devfs INIT");
   impl->read = devfs_read;
   impl->write = devfs_write;
   impl->exists = devfs_exists;
@@ -101,5 +101,5 @@ void devfs_init(vfs_impl_t* impl) {
   devfs_audio_install();
   devfs_keyboard_install();
   devfs_framebuffer_install();
-  printf(" OK, ");
+  printf(GREEN ", OK, ");
 }

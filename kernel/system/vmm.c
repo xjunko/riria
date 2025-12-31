@@ -156,7 +156,7 @@ bool vmm_map_page(pagemap_t* pagemap, uintptr_t virt, uintptr_t phys,
 
 fail:
   spin_unlock(&vmm_lock);
-  printf("failed to map page for virt=0x%x", virt);
+  printf(ERROR "failed to map page for virt=0x%x", virt);
   panic("vmm_map_page failure");
   return false;
 }
@@ -296,7 +296,7 @@ void vmm_map_zero(pagemap_t* pagemap, uintptr_t virt, size_t len) {
 }
 
 void vmm_install(void) {
-  printf("[vmm] VMM INIT...");
+  printf(INFO "[   vmm] VMM INIT...");
   void* pml4_phys = pmm_allocate();
 
   if (!pml4_phys) {
@@ -377,7 +377,7 @@ void vmm_install(void) {
   }
 
   vmm_switch_pagemap(kernel_pagemap);
-  printf(" OK!\n");
+  printf(GREEN " OK!\n");
 
   // page fault handler
   isr_install_handler(14, vmm_pagefault);
@@ -396,11 +396,12 @@ void vmm_pagefault(regs_t* r) {
   // HACK: stupid hack
   if (fault_addr >= process_get_current()->user_heap_start &&
       fault_addr < process_get_current()->user_heap_position + PAGE_SIZE) {
-    printf("[vmm] heap start at 0x%x\n",
+    printf(INFO "[   vmm] heap start at 0x%x\n",
            process_get_current()->user_heap_start);
-    printf(
-        "[vmm] page fault in userspace at address 0x%x, allocating heap page\n",
-        fault_addr);
+    printf(WARNING
+           "[   vmm] page fault in userspace at address 0x%x, allocating heap "
+           "page\n",
+           fault_addr);
     uint64_t page_addr = fault_addr & ~(PAGE_SIZE - 1);
     uintptr_t page = (uintptr_t)pmm_allocate();
     vmm_map_page(process_get_current()->pagemap, page_addr, page,
@@ -416,10 +417,10 @@ void vmm_pagefault(regs_t* r) {
 
   // stack
   if (fault_addr >= USER_STACK_BASE && fault_addr < USER_STACK_TOP) {
-    printf(
-        "[vmm] page fault in userspace at address 0x%x, allocating stack "
-        "page\n",
-        fault_addr);
+    printf(WARNING
+           "[   vmm] page fault in userspace at address 0x%x, allocating stack "
+           "page\n",
+           fault_addr);
     uint64_t page_addr = fault_addr & ~(PAGE_SIZE - 1);
     uintptr_t page = (uintptr_t)pmm_allocate();
     vmm_map_page(process_get_current()->pagemap, page_addr, page,
@@ -430,17 +431,20 @@ void vmm_pagefault(regs_t* r) {
 
   // HACK: if we're in userspace just exit the process
   if ((r->cs & 0x3) != 0) {
-    printf("[vmm] page fault in userspace at address 0x%x, exiting process\n",
-           fault_addr);
+    printf(
+        WARNING
+        "[   vmm] page fault in userspace at address 0x%x, exiting process\n",
+        fault_addr);
     IRQ_RES;
     process_exit(-1);
   }
 
   // shit hits the bed, crash out.
-  printf("==================\n");
-  printf("[err] failed in process=%d\n", process_get_current()->id);
-  printf("[err] while in %s mode\n", (r->cs & 0x3) == 0 ? "kernel" : "user");
-  printf("[err] page fault at address 0x%x\n", fault_addr);
+  printf(ERROR "==================\n");
+  printf(ERROR "[err] failed in process=%d\n", process_get_current()->id);
+  printf(ERROR "[err] while in %s mode\n",
+         (r->cs & 0x3) == 0 ? "kernel" : "user");
+  printf(ERROR "[err] page fault at address 0x%x\n", fault_addr);
   print_regs(r);
   panic("erm, page fault occurred");
 }

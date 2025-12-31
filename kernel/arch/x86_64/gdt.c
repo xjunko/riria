@@ -42,17 +42,17 @@ void gdt_install(void) {
   gdt_set_gate(5, 0, 0, 0xFA, 0xA);  // 0x28 - user data segment
   write_tss(6);                      // 0x30 - TSS segment (1)
 
-  printf("[cpu] GDT=0x%x\n", gdtp->base);
-  printf("[cpu] TSS=0x%x\n", (uintptr_t)&gdt.tss);
-  printf("[cpu] GDT INIT...");
+  printf(DEBUG "[   cpu] GDT=0x%x\n", gdtp->base);
+  printf(DEBUG "[   cpu] TSS=0x%x\n", (uintptr_t)&gdt.tss);
+  printf(DEBUG "[   cpu] GDT INIT...");
 
-  printf(" GDTP");
+  printf(DEBUG " GDTP");
   gdt_flush((uintptr_t)gdtp);
-  printf(" TSS");
+  printf(DEBUG " TSS");
   tss_flush();
 
-  printf(" OK!\n");  // it's not a proper osdev project if it doesnt have GDT
-                     // INIT... OK /j
+  printf(DEBUG " OK!\n");  // it's not a proper osdev project if it doesnt have
+                           // GDT INIT... OK /j
 }
 
 void write_tss(uint32_t num) {

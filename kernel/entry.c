@@ -38,7 +38,7 @@ void check_cpu_features(void) {
     panic("cpu does not support FSGSBASE instructions!");
   } else {
     write_cr4(read_cr4() | (1 << 16));  // FSGSBASE
-    printf("[cpu] FSGSBASE instructions enabled\n");
+    printf(INFO "[   cpu] FSGSBASE instructions enabled\n");
   }
 
   if (!cpuid_has_sse()) {
@@ -53,14 +53,14 @@ void check_cpu_features(void) {
     cr4 |= (1ULL << 9);   // OSFXSR enables SSE instructions
     cr4 |= (1ULL << 10);  // OSXMMEXCPT enables SSE exceptions
     write_cr4(cr4);
-    printf("[cpu] SSE enabled\n");
+    printf(INFO "[   cpu] SSE enabled\n");
   }
 }
 
 void kmain(void) {
   serial_install();
-  check_cpu_features();
   boot_verify();
+  check_cpu_features();
 
   // bare minimum
   gdt_install();

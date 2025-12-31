@@ -111,7 +111,7 @@ int heap_expand_pages(size_t pages) {
 }
 
 void heap_install(void) {
-  printf("[heap] installing kernel heap...");
+  printf(INFO "[  heap] installing kernel heap...");
   if (heap_start != NULL) {
     panic("heap_install called multiple times");
   }
@@ -122,7 +122,7 @@ void heap_install(void) {
   if (!heap_expand_pages(KERNEL_INITIAL_PAGES)) {
     panic("heap: failed to allocate the initial kernel heap");
   }
-  printf(" done!\n");
+  printf(GREEN " done!\n");
 }
 
 void* kmalloc(size_t sz) {
@@ -175,7 +175,7 @@ try_again:
   if (!heap_expand_pages(16)) {
     if (!heap_expand_pages(1)) {
       spin_unlock(&heap_lock);
-      printf("kmalloc: Out of heap memory (requested %lx bytes)\n", sz);
+      printf(ERROR "[malloc]: Out of heap memory (requested %lx bytes)\n", sz);
       panic("out of memory");
     }
   }

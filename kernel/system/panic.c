@@ -4,6 +4,6 @@
 
 __attribute__((noreturn)) void panic(const char* message) {
   IRQ_OFF;
-  printf("[err] KERNEL PANIC: %s\n", message);
+  printf(ERROR "[ error] KERNEL PANIC: %s\n", message);
   while (1) asm volatile("hlt");
 }

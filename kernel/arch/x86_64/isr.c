@@ -14,20 +14,20 @@ static struct {
 static isr_callback isr_callbacks[256] = {0};
 
 void isr_install_handler(size_t isr, isr_callback callback) {
-  printf("[isr] installing handler for ISR %d\n", isr);
+  printf(DEBUG "[   isr] installing handler for ISR %d\n", isr);
   isr_callbacks[isr] = callback;
 }
 
 void isr_uninstall_handler(size_t isr) { isr_callbacks[isr] = 0; }
 
 static void _gpf_fault_handler(regs_t* r) {
-  printf("[isr] general protection fault at 0x%lx\n", r->rip);
+  printf(ERROR "[   isr] general protection fault at 0x%lx\n", r->rip);
   print_regs(r);
   panic("general protection fault");
 }
 
 static void _irq_invalid_opcode(regs_t* r) {
-  printf("[irq] invalid opcode exception!\n");
+  printf(ERROR "[   irq] invalid opcode exception!\n");
   print_regs(r);
   panic("invalid opcode exception");
 }
@@ -81,17 +81,18 @@ void isr_install(void) {
 }
 
 void isr_handler(regs_t* r) {
-#ifdef DEBUG
-  printf("[isr] interrupt received: 0x%x (%d)\n", r->int_no, r->int_no);
+#ifdef KDEBUG
+  printf(DEBUG "[   isr] interrupt received: 0x%x (%d)\n", r->int_no,
+         r->int_no);
   print_regs(r);
-  printf("[isr] rip: 0x%lx cs: 0x%lx rsp: 0x%lx ss: 0x%lx\n", r->rip, r->cs,
-         r->rsp, r->ss);
+  printf(DEBUG "[   isr] rip: 0x%lx cs: 0x%lx rsp: 0x%lx ss: 0x%lx\n", r->rip,
+         r->cs, r->rsp, r->ss);
 #endif
 
   isr_callback handler = isr_callbacks[r->int_no];
   if (handler) {
     handler(r);
   } else {
-    printf("[isr] unhandled interrupt: %d\n", r->int_no);
+    printf(ERROR "[   isr] unhandled interrupt: %d\n", r->int_no);
   }
 }

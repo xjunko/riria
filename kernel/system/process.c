@@ -47,7 +47,7 @@ void process_user_entry(process_entry_t entry, uint64_t stack_top) {
 }
 
 void process_create(process_entry_t entry, pagemap_t* pagemap) {
-  printf("[prc] new process (entry=%p) (pagemap=%p)\n", entry, pagemap);
+  printf(INFO "[   prc] new process (entry=%p) (pagemap=%p)\n", entry, pagemap);
 
   process_t* new_process = malloc(sizeof(process_t));
   ASSERT(new_process);
@@ -94,7 +94,8 @@ void process_create(process_entry_t entry, pagemap_t* pagemap) {
 void process_create_user(process_entry_t entry, pagemap_t* pagemap,
                          uintptr_t user_stack_top, uintptr_t user_heap) {
   ASSERT(pagemap != NULL);
-  printf("[prc] new user process (entry=%p) (pagemap=%p) (user_heap=%p)\n",
+  printf(INFO
+         "[   prc] new user process (entry=%p) (pagemap=%p) (user_heap=%p)\n",
          entry, pagemap, user_heap);
 
   process_t* new_process = malloc(sizeof(process_t));
@@ -145,18 +146,18 @@ void process_spawn_elf(uint8_t* elf_data, size_t len) {
   // setup the user heap
   {
     user_heap = (user_heap + 0xFFF) & ~0xFFF;
-    printf("[prc] elf heap starts at %p\n", (void*)user_heap);
+    printf(DEBUG "[   prc] elf heap starts at %p\n", (void*)user_heap);
     uintptr_t heap_page = (uintptr_t)pmm_allocate();
     vmm_map_page(pagemap, user_heap, heap_page, flags);
-    printf("[prc] user heap mapped at %p\n", (void*)user_heap);
+    printf(DEBUG "[   prc] user heap mapped at %p\n", (void*)user_heap);
   }
 
   // setup the user stack
   uintptr_t stack_top = USER_STACK_TOP;
   uintptr_t stack_base = USER_STACK_BASE;
   {
-    printf("[prc] setting up user stack at [%p - %p]\n", (void*)stack_base,
-           (void*)stack_top);
+    printf(DEBUG "[   prc] setting up user stack at [%p - %p]\n",
+           (void*)stack_base, (void*)stack_top);
 
     uint64_t* stack = (uint64_t*)stack_top;
     PUSH_STACK(stack, 0);  // alignment

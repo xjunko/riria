@@ -107,7 +107,8 @@ elf_info_t elf64_load(pagemap_t* pagemap, uint8_t* elf_data, size_t len) {
   info.entry = header->entry_point;
   info.size = end_addr - base_addr;
   info.base = base_addr;
-  printf("[elf] loaded elf64: entry=0x%lx size=0x%lx\n", info.entry, info.size);
+  printf(INFO "[   elf] loaded elf64: entry=0x%lx size=0x%lx\n", info.entry,
+         info.size);
 
   return info;
 }

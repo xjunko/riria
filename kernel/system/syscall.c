@@ -11,21 +11,21 @@
 #include <string.h>
 
 static void print_sysregs(sysregs_t* r) {
-  printf("[irq] rax=0x%x rbx=0x%x rcx=0x%x rdx=0x%x\n", r->rax, r->rbx, r->rcx,
-         r->rdx);
-  printf("[irq] rsi=0x%x rdi=0x%x rbp=0x%x\n", r->rsi, r->rdi, r->rbp);
-  printf("[irq] r8=0x%x r9=0x%x r10=0x%x r11=0x%x\n", r->r8, r->r9, r->r10,
-         r->r11);
-  printf("[irq] r12=0x%x r13=0x%x r14=0x%x r15=0x%x\n", r->r12, r->r13, r->r14,
-         r->r15);
+  printf(DEBUG "[   irq] rax=0x%x rbx=0x%x rcx=0x%x rdx=0x%x\n", r->rax, r->rbx,
+         r->rcx, r->rdx);
+  printf(DEBUG "[   irq] rsi=0x%x rdi=0x%x rbp=0x%x\n", r->rsi, r->rdi, r->rbp);
+  printf(DEBUG "[   irq] r8=0x%x r9=0x%x r10=0x%x r11=0x%x\n", r->r8, r->r9,
+         r->r10, r->r11);
+  printf(DEBUG "[   irq] r12=0x%x r13=0x%x r14=0x%x r15=0x%x\n", r->r12, r->r13,
+         r->r14, r->r15);
 }
 
 // impl
 #define SYSCALL_EXIT 1
 int syscall_exit(sysregs_t* r) {
   int code = r->rdi;
-#ifdef DEBUG
-  printf("[sys] syscall_exit: code=%d\n", code);
+#ifdef KDEBUG
+  printf(DEBUG "[   sys] syscall_exit: code=%d\n", code);
 #endif
   process_exit(code);
   r->rax = 0;
@@ -45,8 +45,8 @@ int syscall_read(sysregs_t* r) {
   char* buf = (char*)r->rsi;
   size_t len = r->rdx;
 
-#ifdef DEBUG
-  printf("[sys] syscall_read: fd=%d buf=%p len=%d\n", fd, buf, len);
+#ifdef KDEBUG
+  printf(DEBUG "[   sys] syscall_read: fd=%d buf=%p len=%d\n", fd, buf, len);
 #endif
 
   int ret = vfs_sys_read(fd, buf, len);
@@ -65,8 +65,8 @@ int syscall_write(sysregs_t* r) {
   char* buf = (char*)r->rsi;
   size_t len = r->rdx;
 
-#ifdef DEBUG
-  printf("[sys] syscall_write: fd=%d buf=%p len=%d\n", fd, buf, len);
+#ifdef KDEBUG
+  printf(DEBUG "[   sys] syscall_write: fd=%d buf=%p len=%d\n", fd, buf, len);
 #endif
 
   // system fds
@@ -106,9 +106,9 @@ int syscall_open(sysregs_t* r) {
   int flags = (int)r->rsi;
   int mode = (int)r->rdx;
 
-#ifdef DEBUG
-  printf("[sys] syscall_open: path=%s flags=0x%x mode=0o%x\n", path, flags,
-         mode);
+#ifdef KDEBUG
+  printf(DEBUG "[   sys] syscall_open: path=%s flags=0x%x mode=0o%x\n", path,
+         flags, mode);
 #endif
   int ret = vfs_sys_open(path, flags, mode);
   if (ret < 0) {
@@ -148,12 +148,12 @@ int syscall_seek(sysregs_t* r) {
 int syscall_write_fsbase(sysregs_t* r) {
   uint64_t fsbase = r->rdi;
 
-#ifdef DEBUG
-  printf("[sys] syscall_write_fsbase: fsbase=0x%lx\n", fsbase);
+#ifdef KDEBUG
+  printf(DEBUG "[   sys] syscall_write_fsbase: fsbase=0x%lx\n", fsbase);
 #endif
 
   if (fsbase <= 0x00007FFFFFFFFFFF) {
-    printf("[sys] writing fsbase to 0x%lx\n", fsbase);
+    printf(DEBUG "[   sys] writing fsbase to 0x%lx\n", fsbase);
     wrmsr(MSR_FS_BASE, fsbase);
     return 0;
   }
@@ -185,21 +185,22 @@ int syscall_mmap(sysregs_t* r) {
   uintptr_t heap_start = current->user_heap_position;
   uint32_t heap_pages = ALIGN_UP(r->rsi, PAGE_SIZE) / PAGE_SIZE;
 
-#ifdef DEBUG
-  printf("[sys] process %d heap position: 0x%lx\n", current->id,
+#ifdef KDEBUG
+  printf(DEBUG "[   sys] process %d heap position: 0x%lx\n", current->id,
          current->user_heap_position);
-  printf(
-      "[sys] syscall_mmap: start=0x%lx size=0x%lx prot=0x%x flags=0x%x fd=%d "
-      "offset=0x%lx\n",
-      heap_start, r->rsi, (uint32_t)r->rdx, (uint32_t)r->r10, (int)r->r8,
-      (uint64_t)r->r9);
-  printf("[sys] mmap with fd %d w/ %d pages, offset=0x%lx\n", fd, heap_pages,
-         offset);
+  printf(DEBUG
+         "[   sys] syscall_mmap: start=0x%lx size=0x%lx prot=0x%x flags=0x%x "
+         "fd=%d "
+         "offset=0x%lx\n",
+         heap_start, r->rsi, (uint32_t)r->rdx, (uint32_t)r->r10, (int)r->r8,
+         (uint64_t)r->r9);
+  printf(DEBUG "[   sys] mmap with fd %d w/ %d pages, offset=0x%lx\n", fd,
+         heap_pages, offset);
 #endif
 
   // we handle this by two cases, one with fd and one without
   if ((int)fd != -1) {
-    printf("[sys] mmap with fd, using vfs_sys_mmap\n");
+    printf(DEBUG "[   sys] mmap with fd, using vfs_sys_mmap\n");
     uint64_t data = (uint64_t)vfs_sys_mmap(fd, &size, flags, offset);
     ASSERT(data != 0);
     for (uint32_t i = 0; i < heap_pages; i++) {
@@ -218,9 +219,10 @@ int syscall_mmap(sysregs_t* r) {
     }
   }
 
-#ifdef DEBUG
-  printf("[sys] new heap position: 0x%lx\n", current->user_heap_position);
-  printf("[sys] mmap returning address: 0x%lx\n", heap_start);
+#ifdef KDEBUG
+  printf(DEBUG "[   sys] new heap position: 0x%lx\n",
+         current->user_heap_position);
+  printf(DEBUG "[   sys] mmap returning address: 0x%lx\n", heap_start);
 #endif
 
   return (int)heap_start;
@@ -253,9 +255,9 @@ int syscall_unmap(sysregs_t* r) {
     return -1;
   }
 
-#ifdef DEBUG
-  printf("[sys] syscall_unmap: addr=0x%lx size=0x%lx pages=%d\n", addr, size,
-         pages);
+#ifdef KDEBUG
+  printf(DEBUG "[   sys] syscall_unmap: addr=0x%lx size=0x%lx pages=%d\n", addr,
+         size, pages);
 #endif
 
   for (uint32_t i = 0; i < pages; i++) {
@@ -267,8 +269,8 @@ int syscall_unmap(sysregs_t* r) {
     vmm_unmap_page(current->pagemap, virt);
   }
 
-#ifdef DEBUG
-  printf("[sys] unmap completed\n");
+#ifdef KDEBUG
+  printf(DEBUG "[   sys] unmap completed\n");
 #endif
 
   return 0;
@@ -276,8 +278,8 @@ int syscall_unmap(sysregs_t* r) {
 
 void syscall_handler(sysregs_t* r) {
   IRQ_OFF;
-#ifdef DEBUG
-  printf("[sys] syscall invoked: %d\n", r->rax);
+#ifdef KDEBUG
+  printf(DEBUG "[   sys] syscall invoked: %d\n", r->rax);
   print_sysregs(r);
 #endif
   switch (r->rax) {
@@ -319,11 +321,11 @@ void syscall_handler(sysregs_t* r) {
       break;
     default:
       r->rax = -1;
-      printf("[sys] unknown syscall: %d\n", r->rax);
+      printf(ERROR "[   sys] unknown syscall: %d\n", r->rax);
       break;
   }
-#ifdef DEBUG
-  printf("[sys] syscall completed, return value: %d\n", r->rax);
+#ifdef KDEBUG
+  printf(DEBUG "[   sys] syscall completed, return value: %d\n", r->rax);
 #endif
   IRQ_RES;
 }

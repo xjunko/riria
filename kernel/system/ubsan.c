@@ -8,8 +8,8 @@ uint64_t __stack_chk_guard = 0x17701369420BABE;
 __attribute__((noreturn)) 
 void __stack_chk_fail(void) {
     void* rip = __builtin_return_address(0);
-    printf("==========================\n");
-    printf("happens at RIP=%p\n", rip);
+    printf(ERROR "==========================\n");
+    printf(ERROR "happens at RIP=%p\n", rip);
     panic("stack smashing detected");
 }
 
@@ -20,8 +20,8 @@ void __ubsan_handle_pointer_overflow(void) {
 
 __attribute__((no_sanitize("undefined")))
 void __ubsan_handle_type_mismatch_v1(struct type_mismatch_v1_data *data, uintptr_t ptr) {
-    if (ptr == 0) printf("null pointer is being used! \n");
-    printf("happens at %s:%u:%u\n", data->location.file, data->location.line, data->location.column);
+    if (ptr == 0) printf(ERROR "null pointer is being used! \n");
+    printf(ERROR "happens at %s:%u:%u\n", data->location.file, data->location.line, data->location.column);
     panic("type mismatch detected");
 }
 

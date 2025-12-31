@@ -112,7 +112,8 @@ static void irq_remap(void) {
   outb_p(PIC1_DATA, 0x01);
   outb_p(PIC2_DATA, 0x01);
 
-  printf("[irq] PIC remapped to 0x%x and 0x%x\n", PIC1_OFFSET, PIC2_OFFSET);
+  printf(DEBUG "[   irq] PIC remapped to 0x%x and 0x%x\n", PIC1_OFFSET,
+         PIC2_OFFSET);
 }
 
 static void irq_setup_gates(void) {
@@ -124,7 +125,7 @@ static void irq_setup_gates(void) {
 void irq_install(void) {
   irq_remap();
 
-  printf("[irq] IRQ INIT...");
+  printf(DEBUG "[   irq] IRQ INIT...");
   IRQ_SET(0);
   IRQ_SET(1);
   IRQ_SET(2);
@@ -155,7 +156,7 @@ void irq_install(void) {
   irq_install_handler(0, _pit_handler, "pit counter");
   irq_install_handler(0, process_schedule, "process scheduling");
 
-  printf(" OK!\n");
+  printf(DEBUG " OK!\n");
 }
 
 void irq_ack(int irq_no) {
@@ -166,16 +167,16 @@ void irq_ack(int irq_no) {
 }
 
 void print_regs(regs_t* r) {
-  printf("[irq] err_code=0x%x int_no=0x%x\n", r->err_code, r->int_no);
-  printf("[irq] rax=0x%x rbx=0x%x rcx=0x%x rdx=0x%x\n", r->rax, r->rbx, r->rcx,
-         r->rdx);
-  printf("[irq] rsi=0x%x rdi=0x%x rbp=0x%x\n", r->rsi, r->rdi, r->rbp);
-  printf("[irq] r8=0x%x r9=0x%x r10=0x%x r11=0x%x\n", r->r8, r->r9, r->r10,
-         r->r11);
-  printf("[irq] r12=0x%x r13=0x%x r14=0x%x r15=0x%x\n", r->r12, r->r13, r->r14,
-         r->r15);
-  printf("[irq] rflags=0x%x cs=0x%x rsp=0x%x ss=0x%x rip=0x%x\n", r->rflags,
-         r->cs, r->rsp, r->ss, r->rip);
+  printf(DEBUG "[   irq] err_code=0x%x int_no=0x%x\n", r->err_code, r->int_no);
+  printf(DEBUG "[   irq] rax=0x%x rbx=0x%x rcx=0x%x rdx=0x%x\n", r->rax, r->rbx,
+         r->rcx, r->rdx);
+  printf(DEBUG "[   irq] rsi=0x%x rdi=0x%x rbp=0x%x\n", r->rsi, r->rdi, r->rbp);
+  printf(DEBUG "[   irq] r8=0x%x r9=0x%x r10=0x%x r11=0x%x\n", r->r8, r->r9,
+         r->r10, r->r11);
+  printf(DEBUG "[   irq] r12=0x%x r13=0x%x r14=0x%x r15=0x%x\n", r->r12, r->r13,
+         r->r14, r->r15);
+  printf(DEBUG "[   irq] rflags=0x%x cs=0x%x rsp=0x%x ss=0x%x rip=0x%x\n",
+         r->rflags, r->cs, r->rsp, r->ss, r->rip);
 }
 
 void irq_handler(regs_t* r) {

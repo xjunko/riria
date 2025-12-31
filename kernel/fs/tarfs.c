@@ -33,7 +33,9 @@ static void _tarfs_add_file(const char* loc, size_t sz) {
     tarfs_tail = file;
   }
 
-  printf(", tarfs_file=%s", file->loc);
+#ifdef KDEBUG
+  printf(YELLOW ", tarfs_file=%s", file->loc);
+#endif
 }
 
 static tarfs_file_t* _tarfs_find_file(const char* path) {
@@ -45,7 +47,7 @@ static tarfs_file_t* _tarfs_find_file(const char* path) {
     curr = curr->next;
   }
 
-  printf("tarfs: file not found: %s\n", path);
+  printf(ERROR "tarfs: file not found: %s\n", path);
   UNREACHABLE();
 
   return NULL;
@@ -138,6 +140,8 @@ void tarfs_init(vfs_impl_t* impl) {
   impl->seek = tarfs_seek;
   impl->stat = tarfs_stat;
 
+  printf(YELLOW "tarfs INIT");
+
   for (uint64_t i = 0; i < module_request.response->module_count; i++) {
     if (strcmp(module_request.response->modules[i]->path,
                "/boot/initramfs.tar") == 0) {
@@ -162,5 +166,5 @@ void tarfs_init(vfs_impl_t* impl) {
     ptr += (((file_size + 511) / 512) + 1) * 512;
   }
 
-  printf(", tarfs INIT");
+  printf(GREEN ", OK");
 }

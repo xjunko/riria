@@ -23,7 +23,10 @@ int printf(const char* fmt, ...) {
   va_end(args);
 
   for (int i = 0; buf[i]; i++) serial_write(buf[i]);
+  for (int i = 0; RESET[i]; i++) serial_write(RESET[i]);
+
   framebuffer_write(buf);
+  framebuffer_write(RESET);
 
   return 0;
 }

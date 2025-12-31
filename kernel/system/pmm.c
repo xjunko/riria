@@ -62,7 +62,7 @@ static size_t total_ram_pages = 0;
 static spin_lock_t pmm_lock = {0};
 
 void pmm_install(void) {
-  printf("[pmm] PMM INIT...");
+  printf(INFO "[   pmm] PMM INIT...");
 
   size_t entry_count = memmap_request.response->entry_count;
   struct limine_memmap_entry** entries = memmap_request.response->entries;
@@ -74,12 +74,13 @@ void pmm_install(void) {
       highest_address = top;
     }
   }
-  printf(", highest_address=0x%lx", highest_address);
+  printf(INFO ", highest_address=0x%lx", highest_address);
 
   highest_page = (highest_address - 1) / PAGE_SIZE;
   size_t max_bitmap_pages = PMM_BITMAP_SIZE * 8;
   if (highest_page >= max_bitmap_pages) {
-    printf(", limiting highest_page from %lu to max supported %lu pages",
+    printf(WARNING
+           ", limiting highest_page from %lu to max supported %lu pages",
            highest_page, max_bitmap_pages);
     highest_page = max_bitmap_pages - 1;
   }
@@ -111,7 +112,8 @@ void pmm_install(void) {
   }
 
   free_pages = total_ram_pages;
-  printf(", total_ram=%luMiB", (total_ram_pages * PAGE_SIZE) / (1024 * 1024));
+  printf(INFO ", total_ram=%luMiB",
+         (total_ram_pages * PAGE_SIZE) / (1024 * 1024));
 
   struct limine_executable_address_response* kaddr =
       executable_address_request.response;
@@ -161,7 +163,7 @@ void pmm_install(void) {
   }
 
   used_pages = total_ram_pages - free_pages;
-  printf(", OK!\n");
+  printf(GREEN ", OK!\n");
 }
 
 void* pmm_allocate(void) {

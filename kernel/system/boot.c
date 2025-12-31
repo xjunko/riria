@@ -8,9 +8,9 @@ static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(4);
 // clang-format on
 
 void boot_verify(void) {
-  printf("[sys] %s-%s compiled with %s %s\n", OS_NAME, OS_CODENAME,
+  printf(INFO "[   sys] %s-%s compiled with %s %s\n", OS_NAME, OS_CODENAME,
          COMPILER_NAME, COMPILER_VERSION_STRING);
-  printf("[sys] verifying bootloader... \n");
+  printf(DEBUG "[   sys] verifying bootloader... \n");
 
   if (LIMINE_BASE_REVISION_SUPPORTED(limine_base_revision) == false) {
     panic("unsupported limine base revision!");
@@ -33,8 +33,8 @@ void boot_verify(void) {
   }
 
   if (module_request.response->module_count <= 0) {
-    printf("[sys] no modules provided, oh well.\n");
+    printf(WARNING "[   sys] no modules provided, oh well.\n");
   }
 
-  printf("[sys] bootloader verified.\n");
+  printf(INFO "[   sys] bootloader verified.\n");
 }
