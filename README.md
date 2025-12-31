@@ -8,6 +8,16 @@ this is a very poor attempt at making an operating system, you should take every
 ## what this is not
 - an original project, most of the kernel wouldn't even work without me referencing other osdev projects.
 
+## building
+you need:
+```
+- git
+- make
+- qemu
+- x86_64-elf-gcc
+```
+kernel is compiled and tested with Arch Linux (btw), so if youre using something similar, it should work :D
+
 ## things that work:
 ### kernel
 - gdt/idt/irq/isr

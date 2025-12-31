@@ -8,6 +8,10 @@ AS    = $(TOOLCHAIN)/$(ARCH)-$(OS)-as
 LD    = $(TOOLCHAIN)/$(ARCH)-$(OS)-gcc
 STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 
+ifeq (, $(shell command -v $(CC) 2>/dev/null))
+$(error "x86_64-elf-gcc is required but not found, please install and change the the TOOLCHAIN variable in the Makefile accordingly")
+endif
+
 EMU       = qemu-system-x86_64
 EMU_ARGS  = -cpu host -machine q35,accel=kvm -smp 1 -m 256M -vga virtio
 EMU_ARGS += -serial stdio -no-reboot -no-shutdown \
