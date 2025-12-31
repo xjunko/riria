@@ -12,6 +12,7 @@ __attribute__((noreturn)) void panic(const char* message) {
   if (is_user) {
     printf(WARNING "[ error] Attempting to kill user process %u (name=%s)\n",
            process_get_current()->id, process_get_current()->name);
+    IRQ_RES;
     process_exit(-1);  // hopefully thats all we needed to do.
   }
 
