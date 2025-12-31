@@ -1,6 +1,15 @@
 #pragma once
 #include <riria/types.h>
 
+#define AC97_BDL_IOC (1 << 15)
+#define AC97_BDL_LAST (1 << 14)
+
+typedef struct {
+  uint32_t addr;
+  uint16_t samples;
+  uint16_t ctrl;
+} __attribute__((packed)) ac97_buffer_desc_t;
+
 typedef struct audio_buffer {
   volatile uint8_t* data;
   size_t data_written;

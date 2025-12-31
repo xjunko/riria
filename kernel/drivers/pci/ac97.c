@@ -49,10 +49,7 @@ int ac97_can_write(void) {
 }
 
 void ac97_setup_buffer(void) {
-  // NOTE: certain line will cause /dev/fb0 bugs, though, since we dont have
-  // anything that uses audio yet, we can leave it as is for now.
-
-  uint16_t* pointer = buf_desc;
+  ac97_buffer_desc_t* desc = (ac97_buffer_desc_t*)buf_desc;
 
   for (int i = 0; i < AC97_BUFFERS; i++) {
     void* physical_audio_data;
@@ -61,18 +58,15 @@ void ac97_setup_buffer(void) {
     ASSERT(audio_data);
 
     buffers[i].data = audio_data;
-    buffers[i].phys = (uintptr_t)physical_audio_data;  // this line
+    buffers[i].phys = (uintptr_t)physical_audio_data;
     buffers[i].has_played = 1;
     buffers[i].data_written = 0;
 
-    // and below
-    *((uint32_t*)pointer) = (uint32_t)(uintptr_t)physical_audio_data;
-    pointer += 2;
-    *pointer = AC97_BUFFER_SIZE / 2;
-    pointer++;
-    *pointer = 0;
-    pointer++;
+    desc[i].addr = (uint32_t)(uintptr_t)physical_audio_data;
+    desc[i].samples = AC97_BUFFER_SIZE / 2;
+    desc[i].ctrl = 0;
   }
+  desc[AC97_BUFFERS - 1].ctrl |= AC97_BDL_LAST;
 }
 
 int ac97_write_buffer(uint8_t* buf, size_t sz) {
@@ -98,7 +92,8 @@ int ac97_write_buffer(uint8_t* buf, size_t sz) {
   memset((uint8_t*)buffers[entry].data, 0x00, AC97_BUFFER_SIZE);
   memcpy((uint8_t*)buffers[entry].data, buf, sz);
 
-  outb(nabm.addr + 0x10 + 0x5, entry);
+  uint8_t lvi = (entry + AC97_BUFFERS - 1) % AC97_BUFFERS;
+  outb(nabm.addr + 0x10 + 0x5, lvi);
   entry = (entry + 1) % AC97_BUFFERS;
   ac97_flush();
   spin_unlock(&lock);
