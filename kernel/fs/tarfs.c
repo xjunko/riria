@@ -15,10 +15,19 @@ static void _tarfs_add_file(const char* loc, size_t sz) {
   tarfs_file_t* file = malloc(sizeof(tarfs_file_t));
   ASSERT(file);
 
-  // ./file.ext to /file.ext
-  const char* loc_wo_dot = loc + 1;
+  // remove leading dot, if there is one
+  if (loc[0] == '.') {
+    loc += 1;
+  } else {
+    // add leading slash
+    char* new_loc = malloc(strlen(loc) + 2);
+    ASSERT(new_loc);
+    new_loc[0] = '/';
+    strcpy(new_loc + 1, loc);
+    loc = new_loc;
+  }
 
-  file->loc = loc_wo_dot;
+  file->loc = loc;
   file->read = tarfs_read;
   file->write = NULL;
   file->seek = tarfs_seek;
@@ -65,18 +74,16 @@ static int oct2bin(unsigned char* str, int size) {
 }
 
 ssize_t tarfs_read(const char* path, void* buffer, size_t sz) {
-  char tar_path[256];
-  tar_path[0] = '.';
-  strcpy(tar_path + 1, path);
+  const char* tar_path = path;
 
   unsigned char* ptr = (unsigned char*)initramfs;
   while (memcmp(ptr + 257, "ustar", 5) == 0) {
     int file_size = oct2bin(ptr + 0x7c, 11);
     char* path = (char*)ptr;
 
-    if (!memcmp(ptr, tar_path, strlen(tar_path) + 1)) {
+    if (strcmp(path, tar_path + 1) == 0) {
       // NOTE: this is fairly hacky, but it works for now
-      tarfs_file_t* file = _tarfs_find_file(tar_path + 1);
+      tarfs_file_t* file = _tarfs_find_file(tar_path);
       ASSERT(file);
 
       size_t seek_pos = file->seek_pos;
