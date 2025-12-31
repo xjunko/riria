@@ -46,7 +46,7 @@ void process_user_entry(process_entry_t entry, uint64_t stack_top) {
   UNREACHABLE();
 }
 
-void process_create(process_entry_t entry, pagemap_t* pagemap) {
+process_t* process_create(process_entry_t entry, pagemap_t* pagemap) {
   printf(INFO "[   prc] new process (entry=%p) (pagemap=%p)\n", entry, pagemap);
 
   process_t* new_process = malloc(sizeof(process_t));
@@ -89,10 +89,12 @@ void process_create(process_entry_t entry, pagemap_t* pagemap) {
   process_node_t* new_node = malloc(sizeof(process_node_t));
   new_node->process = new_process;
   PROCESS_PUSH(new_node);
+
+  return new_process;
 }
 
-void process_create_user(process_entry_t entry, pagemap_t* pagemap,
-                         uintptr_t user_stack_top, uintptr_t user_heap) {
+process_t* process_create_user(process_entry_t entry, pagemap_t* pagemap,
+                               uintptr_t user_stack_top, uintptr_t user_heap) {
   ASSERT(pagemap != NULL);
   printf(INFO
          "[   prc] new user process (entry=%p) (pagemap=%p) (user_heap=%p)\n",
@@ -135,9 +137,11 @@ void process_create_user(process_entry_t entry, pagemap_t* pagemap,
   process_node_t* new_node = malloc(sizeof(process_node_t));
   new_node->process = new_process;
   PROCESS_PUSH(new_node);
+
+  return new_process;
 }
 
-void process_spawn_elf(uint8_t* elf_data, size_t len) {
+void process_spawn_elf(const char* name, uint8_t* elf_data, size_t len) {
   pagemap_t* pagemap = vmm_new_pagemap();
   uint64_t flags = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
   elf_info_t elf = elf64_load(pagemap, elf_data, len);
@@ -172,8 +176,9 @@ void process_spawn_elf(uint8_t* elf_data, size_t len) {
     }
   }
 
-  process_create_user((process_entry_t)elf.entry, pagemap, stack_top,
-                      user_heap);
+  process_t* new_process = process_create_user((process_entry_t)elf.entry,
+                                               pagemap, stack_top, user_heap);
+  new_process->name = (name != NULL) ? name : "unnamed";
 }
 
 void process_reap(void) {

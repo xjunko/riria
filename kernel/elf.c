@@ -38,7 +38,7 @@ void run_elf(const char* path) {
     return;
   }
 
-  process_spawn_elf(buf, stat.size);
+  process_spawn_elf(path, buf, stat.size);
 }
 
 void userspace_shell(void) {

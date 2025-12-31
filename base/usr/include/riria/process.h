@@ -50,8 +50,9 @@ typedef struct process_node {
 
 typedef void (*process_entry_t)(void);
 
-void process_create(process_entry_t, pagemap_t*);
-void process_create_user(process_entry_t, pagemap_t*, uintptr_t, uintptr_t);
+process_t* process_create(process_entry_t, pagemap_t*);
+process_t* process_create_user(process_entry_t, pagemap_t*, uintptr_t,
+                               uintptr_t);
 
 void process_reap(void);
 int process_schedule(regs_t* r);
@@ -59,7 +60,7 @@ void process_exit(int);
 
 process_t* process_get_current(void);
 
-void process_spawn_elf(uint8_t*, size_t);
+void process_spawn_elf(const char*, uint8_t*, size_t);
 
 extern void process_switch(uint64_t*, uint64_t*);
 __attribute__((noreturn)) extern void switch_to_user(uint64_t, uint64_t);
