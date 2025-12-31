@@ -88,8 +88,9 @@ ssize_t tarfs_read(const char* path, void* buffer, size_t sz) {
       size_t remaining = (size_t)file_size - seek_pos;
       size_t bytes_to_read = remaining < sz ? remaining : sz;
 
-      memcpy(buffer, data, bytes_to_read);
+      if (bytes_to_read == 0) return 0;
 
+      memcpy(buffer, data, bytes_to_read);
       file->seek_pos += bytes_to_read;
 
       return bytes_to_read;
