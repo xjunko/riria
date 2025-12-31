@@ -8,6 +8,8 @@ AS    = $(TOOLCHAIN)/$(ARCH)-$(OS)-as
 LD    = $(TOOLCHAIN)/$(ARCH)-$(OS)-gcc
 STRIP = $(TOOLCHAIN)/$(ARCH)-$(OS)-strip
 
+MAKE  = make
+
 ifeq (, $(shell command -v $(CC) 2>/dev/null))
 $(error "x86_64-elf-gcc is required but not found, please install and change the the TOOLCHAIN variable in the Makefile accordingly")
 endif
@@ -53,6 +55,7 @@ KERNEL_ASMOBJS += $(patsubst kernel/%.S,$(TMP_OBJ)/%.o,$(wildcard kernel/*/*/*/*
 .PHONY: all clean run
 all: image.iso
 
+# kernel stuff
 $(TMP_OBJ):
 	mkdir -p $@
 
@@ -69,6 +72,13 @@ OBJS = $(KERNEL_OBJS) $(KERNEL_ASMOBJS)
 $(BASE)/boot/kernel.bin: kernel/link.ld $(OBJS)
 	$(LD) $(KERNEL_LDFLAGS) -T kernel/link.ld $(OBJS) -o $@
 
+
+# userspace and initramfs stuff
+$(BASE)/boot/initramfs.tar: misc/userspace
+	mkdir -p $(dir $@) 
+	$(MAKE) -C misc/userspace
+	$(MAKE) -C misc/initramfs
+
 # limine stuff
 $(BASE)/boot/limine/repo/limine-bios.sys:
 	mkdir -p $(dir $@)
@@ -76,7 +86,7 @@ $(BASE)/boot/limine/repo/limine-bios.sys:
 	make -C $(dir $@)
 
 # building the final image
-$(TMP_FINAL)/image.iso: $(TMP_OBJ) $(BASE)/boot/kernel.bin $(BASE)/boot/limine/repo/limine-bios.sys
+$(TMP_FINAL)/image.iso: $(TMP_OBJ) $(BASE)/boot/kernel.bin $(BASE)/boot/limine/repo/limine-bios.sys $(BASE)/boot/initramfs.tar
 	mkdir -p $(TMP_ISO)/
 	mkdir -p $(TMP_ISO)/boot/
 	mkdir -p $(TMP_ISO)/boot/limine/
@@ -107,7 +117,11 @@ $(TMP_FINAL)/image.iso: $(TMP_OBJ) $(BASE)/boot/kernel.bin $(BASE)/boot/limine/r
         -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin \
         -efi-boot-part --efi-boot-image --protective-msdos-label \
         $(TMP_ISO) -o $(TMP_FINAL)/image.iso
-		
+
+sync: $(BASE)/boot/initramfs.tar
+	$(MAKE) -C misc/userspace clean all
+	$(MAKE) -C misc/initramfs clean all
+
 run: $(TMP_FINAL)/image.iso
 	$(EMU) $(EMU_ARGS) -cdrom $<
 
