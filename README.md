@@ -15,6 +15,19 @@ you need:
 - make
 - qemu
 - x86_64-elf-gcc
+- x86_64-riria-gcc (this one is not publicly available, it's on my self-hosted git repo)
+```
+to build the kernel just run
+```
+make run
+```
+that should get it working... in the event that it doesn't, use `sync`, it forces userspace/initramfs to be rebuilt
+```
+make sync run
+```
+it is also recommended to use `clean` as well, the compilation will happen in /tmp _(which i hoped you set up to be ram)_
+```
+make clean sync run
 ```
 kernel is compiled and tested with Arch Linux (btw), so if youre using something similar, it should work :D
 
@@ -68,6 +81,11 @@ kernel is compiled and tested with Arch Linux (btw), so if youre using something
     - forking
  
 ... and thousand other stuff that i don't remember and know yet.
+
+### third-party
+- [[Limine]](https://codeberg.org/Limine/Limine.git) - the x86_64 branch uses Limine as it's bootloader, makes everything much easier 
+- [[Flanterm]](https://codeberg.org/Mintsuki/Flanterm) - this is what we used for the /dev/fb0 console output
+- [[mlibc]](https://github.com/managarm/mlibc) - quite possibly the easiest libc to port ever
 
 ### license:
 ISC License
