@@ -12,7 +12,8 @@ base/boot/limine/repo/*
 
 # initramfs
 misc/initramfs/*
+!misc/initramfs/Makefile
 base/boot/initramfs.tar
 
 # userspace
-misc/userspace/libc/*.a
+!misc/userspace/Makefile
