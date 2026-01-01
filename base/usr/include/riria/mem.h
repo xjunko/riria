@@ -25,6 +25,8 @@ void kfree(void*);
 void pmm_install(void);
 void* pmm_allocate(void);
 void pmm_free(void*);
+size_t pmm_get_total_pages(void);
+size_t pmm_get_free_pages(void);
 
 // vmm
 #define PAGE_SIZE 4096

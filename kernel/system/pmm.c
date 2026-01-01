@@ -216,3 +216,6 @@ void pmm_free(void* page) {
   spin_unlock(&pmm_lock);
   IRQ_RES;
 }
+
+size_t pmm_get_total_pages(void) { return total_ram_pages; }
+size_t pmm_get_free_pages(void) { return free_pages; }
