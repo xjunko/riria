@@ -56,6 +56,7 @@ process_t* process_create_user(process_entry_t, pagemap_t*, uintptr_t,
 
 void process_reap(void);
 int process_schedule(regs_t* r);
+void process_yield(void);
 void process_exit(int);
 
 process_t* process_get_current(void);

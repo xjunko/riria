@@ -263,6 +263,8 @@ cleanup:
   return 0;
 }
 
+void process_yield(void) { process_schedule(NULL); }
+
 void process_exit(int code) {
   UNUSED(code);
   if (!process_get_current()) {
