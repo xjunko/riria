@@ -85,6 +85,7 @@ process_t* process_create(process_entry_t entry, pagemap_t* pagemap) {
   new_process->ursp = 0;
   new_process->user_heap_start = 0;
   new_process->user_heap_position = 0;
+  new_process->name = "kernel";
 
   process_node_t* new_node = malloc(sizeof(process_node_t));
   new_node->process = new_process;
@@ -133,6 +134,7 @@ process_t* process_create_user(process_entry_t entry, pagemap_t* pagemap,
 
   new_process->user_heap_start = user_heap;
   new_process->user_heap_position = user_heap;
+  new_process->name = "user-unnamed";
 
   process_node_t* new_node = malloc(sizeof(process_node_t));
   new_node->process = new_process;
@@ -200,11 +202,24 @@ void process_reap(void) {
         }
       }
 
+      printf(WARNING "[   prc] reaping process %d (%s)\n", proc->id,
+             proc->name ? proc->name : "unnamed");
+
       // unmap the stacks
       uintptr_t stack_top = USER_STACK_TOP;
       uintptr_t stack_base = USER_STACK_BASE;
       for (uintptr_t i = stack_base; i < stack_top; i += PAGE_SIZE) {
         vmm_unmap_page(proc->pagemap, i);
+      }
+
+      // unmap the heap
+      if (proc->user_heap_start) {
+        uintptr_t heap_start = proc->user_heap_start;
+        uintptr_t heap_end = proc->user_heap_position;
+        heap_start = (heap_start + 0xFFF) & ~0xFFF;
+        for (uintptr_t addr = heap_start; addr < heap_end; addr += PAGE_SIZE) {
+          vmm_unmap_page(proc->pagemap, addr);
+        }
       }
 
       free(proc->stack);

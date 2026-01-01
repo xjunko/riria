@@ -57,6 +57,9 @@ int heap_expand_pages(size_t pages) {
   uintptr_t base = (uintptr_t)heap_start + heap_size;
   uintptr_t new_region_size = pages * PAGE_SIZE;
 
+  ASSERT(((uintptr_t)heap_start & (PAGE_SIZE - 1)) == 0);
+  ASSERT((heap_size & (PAGE_SIZE - 1)) == 0);
+
   for (size_t i = 0; i < pages; ++i) {
     void* phys = pmm_allocate();
     if (!phys) {
