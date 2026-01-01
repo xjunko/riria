@@ -22,6 +22,7 @@
 #include <string.h>
 
 extern void userspace_shell(void);
+extern void kernel_info(void);
 
 bool cpuid_has_sse(void) {
   cpuid_info_t info = cpuid(1, 0);
@@ -86,6 +87,9 @@ void kmain(void) {
 
   // idle process
   process_create(NULL, NULL);
+
+  // kernel inf
+  process_create(kernel_info, NULL);
 
   // shell
   process_create(userspace_shell, NULL);
