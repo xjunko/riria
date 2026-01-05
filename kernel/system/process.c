@@ -262,11 +262,16 @@ int process_schedule(regs_t* r) {
   ASSERT(curr_proc->stack_top);
   tss_set_stack((uint64_t)curr_proc->stack_top);
 
-  asm volatile("fxsave %0" ::"m"(prev_proc->fpu_state));
-  asm volatile("fxrstor %0" ::"m"(curr_proc->fpu_state));
-  prev_proc->fsbase = rdmsr(MSR_FS_BASE);
+  if (prev_proc->type == PROCESS_USER) {
+    asm volatile("fxsave %0" ::"m"(prev_proc->fpu_state));
+    prev_proc->fsbase = rdmsr(MSR_FS_BASE);
+  }
 
-  wrmsr(MSR_FS_BASE, curr_proc->fsbase);
+  if (curr_proc->type == PROCESS_USER) {
+    asm volatile("fxrstor %0" ::"m"(curr_proc->fpu_state));
+    wrmsr(MSR_FS_BASE, curr_proc->fsbase);
+  }
+
   wrmsr(MSR_USER_GS_BASE, (uint64_t)curr_proc);
 
   ASSERT(&prev_proc->krsp);
