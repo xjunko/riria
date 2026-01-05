@@ -24,7 +24,7 @@
 #define PIT_TARGET_HZ 1000
 
 // pit
-int ticks = 0;
+uint64_t ticks = 0;
 int _pit_handler(regs_t* r) {
   UNUSED(r);
   ticks++;

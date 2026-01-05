@@ -12,7 +12,7 @@
 typedef void (*irq_handler_t)(regs_t*);
 typedef int (*irq_handler_chain_t)(regs_t*);
 
-extern int ticks;
+extern uint64_t ticks;
 
 void int_disable(void);
 void int_resume(void);
