@@ -11,6 +11,8 @@
 #define AC97_BUFFERS 32
 #define AC97_BUFFER_SIZE 128000
 
+bool ac97_initialized = false;
+
 pci_device_t ac97;
 pci_bar_t nabm;
 pci_bar_t nam;
@@ -26,6 +28,8 @@ int current_volume = 100;
 int entry = 0;
 
 void ac97_flush(void) {
+  if (!ac97_initialized) return;
+
   uint8_t s = inb(nabm.addr + 0x10 + 0xB);
   if (s & (1 << 0)) return;
   s |= (1 << 0);
@@ -33,6 +37,8 @@ void ac97_flush(void) {
 }
 
 int ac97_can_write(void) {
+  if (!ac97_initialized) return 0;
+
   uint8_t read_ptr = inb(nabm.addr + 0x10 + 0x4);
 
   uint8_t buffer_left;
@@ -70,6 +76,8 @@ void ac97_setup_buffer(void) {
 }
 
 int ac97_write_buffer(uint8_t* buf, size_t sz) {
+  if (!ac97_initialized) return 0;
+
   ASSERT(sz <= AC97_BUFFER_SIZE);
   spin_lock(&lock);
   uint8_t read_ptr = inb(nabm.addr + 0x10 + 0x4);
@@ -104,6 +112,8 @@ char temp_buffer[AC97_BUFFER_SIZE];
 size_t temp_buffer_count = 0;
 
 int ac97_write_pcm(uint8_t* buf, size_t sz) {
+  if (!ac97_initialized) return 0;
+
   size_t bytes_written = min(sz, AC97_BUFFER_SIZE - temp_buffer_count);
   memcpy(temp_buffer + temp_buffer_count, buf, bytes_written);
   temp_buffer_count += bytes_written;
@@ -136,6 +146,8 @@ void ac97_set_volume(int volume) {
   outb_w(nam.addr + 0x18, right_chan | (left_chan << 8));
 }
 
+bool ac97_available(void) { return ac97_initialized; }
+
 // https://github.com/elttil/sbOS/blob/master/kernel/drivers/ac97.c#L161
 void ac97_install(void) {
   printf(DEBUG "[  ac97] INIT...");
@@ -146,7 +158,7 @@ void ac97_install(void) {
     printf(
         WARNING
         "[  ac97] audio driver failed to install, /dev/audio will not work\n");
-    UNREACHABLE();
+    return;
   }
 
   ptr = buf_desc = kmalloc_phys(0x1000, (uintptr_t*)&phys_buf_desc);
@@ -229,4 +241,6 @@ void ac97_install(void) {
   outb(nabm.addr + 0x10 + 0xB, control);
 
   printf(GREEN ", OK!\n");
+
+  ac97_initialized = true;
 }

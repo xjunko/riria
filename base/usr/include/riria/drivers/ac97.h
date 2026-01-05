@@ -18,6 +18,7 @@ typedef struct audio_buffer {
 } audio_buffer_t;
 
 void ac97_install(void);
+bool ac97_available(void);
 
 void ac97_set_volume(int);
 

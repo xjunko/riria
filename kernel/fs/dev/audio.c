@@ -6,12 +6,10 @@
 
 ssize_t _audio_write(const char* path, const void* buffer, size_t sz) {
   UNUSED(path);
-
+  if (!ac97_available()) return -1;
   while (!ac97_can_write())
     ;
-
   int wb = ac97_write_pcm((uint8_t*)buffer, sz);
-
   return wb;
 }
 
