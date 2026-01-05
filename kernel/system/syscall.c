@@ -21,6 +21,13 @@ static void print_sysregs(sysregs_t* r) {
 }
 
 // impl
+#define SYSCALL_RESTART 0
+int syscall_restart(sysregs_t* r) {
+  UNUSED(r);
+  UNREACHABLE();
+  return 0;
+}
+
 #define SYSCALL_EXIT 1
 int syscall_exit(sysregs_t* r) {
   int code = r->rdi;
@@ -276,6 +283,8 @@ int syscall_unmap(sysregs_t* r) {
   return 0;
 }
 
+// the syscall are based loosely from linux'x x86_32 syscall numbers
+// https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md#x86-32_bit
 void syscall_handler(sysregs_t* r) {
   IRQ_OFF;
 #ifdef KDEBUG
@@ -283,6 +292,9 @@ void syscall_handler(sysregs_t* r) {
   print_sysregs(r);
 #endif
   switch (r->rax) {
+    case SYSCALL_RESTART:
+      r->rax = syscall_restart(r);
+      break;
     case SYSCALL_EXIT:
       r->rax = syscall_exit(r);
       break;

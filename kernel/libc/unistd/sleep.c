@@ -3,12 +3,6 @@
 #include <unistd.h>
 
 unsigned int sleep(unsigned int seconds) {
-  uint32_t millisecond = seconds * 1000;
-  uint32_t start_ticks = ticks;
-
-  while (ticks - start_ticks < millisecond) {
-    process_yield();
-  }
-
+  process_sleep(seconds * 1000);
   return 0;
 }

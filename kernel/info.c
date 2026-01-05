@@ -1,3 +1,4 @@
+#include <riria/cpu/irq.h>
 #include <riria/drivers/framebuffer.h>
 #include <riria/fs/vfs.h>
 #include <riria/mem.h>
@@ -63,10 +64,11 @@ void kernel_info(void) {
             "Total RAM: %u MB\n"
             "Free RAM: %u MB\n"
             "Framebuffer: %ux%u @ %u bpp\n"
+            "Ticks: %u\n"
             "-------------------\n",
             (uint32_t)((pmm_get_total_pages() * 4096) / (1024 * 1024)),
             (uint32_t)((pmm_get_free_pages() * 4096) / (1024 * 1024)),
-            fb_info.width, fb_info.height, fb_info.bpp);
+            fb_info.width, fb_info.height, fb_info.bpp, ticks);
 
     // might as well reset the area around the text
     for (size_t y = 100; y < 300; y++) {

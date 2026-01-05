@@ -254,6 +254,12 @@ int process_schedule(regs_t* r) {
   process_t* curr_proc = process_head->process;
   ASSERT(curr_proc);
 
+  // skip sleeping process
+  while (process_head->process->wake_at > ticks) {
+    process_head = process_head->next;
+    curr_proc = process_head->process;
+  }
+
   // o.O
   if (curr_proc->id == prev_proc->id) goto cleanup;
 
@@ -284,6 +290,12 @@ cleanup:
 }
 
 void process_yield(void) { process_schedule(NULL); }
+
+void process_sleep(uint64_t ms) {
+  if (!process_get_current()) panic("sleeping without a process");
+  process_get_current()->wake_at = ticks + ms;
+  process_yield();
+}
 
 void process_exit(int code) {
   UNUSED(code);
