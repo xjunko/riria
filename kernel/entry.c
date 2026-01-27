@@ -24,46 +24,12 @@
 extern void userspace_shell(void);
 extern void kernel_info(void);
 
-bool cpuid_has_sse(void) {
-  cpuid_info_t info = cpuid(1, 0);
-  return (info.edx & (1 << 25)) != 0;
-}
-
-bool cpuid_has_fsgsbase(void) {
-  cpuid_info_t info = cpuid(7, 0);
-  return (info.ebx & (1 << 0)) != 0;
-}
-
-void check_cpu_features(void) {
-  if (!cpuid_has_fsgsbase()) {
-    panic("cpu does not support FSGSBASE instructions!");
-  } else {
-    write_cr4(read_cr4() | (1 << 16));  // FSGSBASE
-    printf(INFO "[   cpu] FSGSBASE instructions enabled\n");
-  }
-
-  if (!cpuid_has_sse()) {
-    panic("cpu does not support SSE!");
-  } else {
-    uint64_t cr0 = read_cr0();
-    cr0 &= ~(1ULL << 2);  // clear EM to allow FPU instructions
-    cr0 |= (1ULL << 1);   // set MP so WAIT/FWAIT checks TS bit
-    write_cr0(cr0);
-
-    uint64_t cr4 = read_cr4();
-    cr4 |= (1ULL << 9);   // OSFXSR enables SSE instructions
-    cr4 |= (1ULL << 10);  // OSXMMEXCPT enables SSE exceptions
-    write_cr4(cr4);
-    printf(INFO "[   cpu] SSE enabled\n");
-  }
-}
-
 void kmain(void) {
   serial_install();
   boot_verify();
-  check_cpu_features();
 
-  // bare minimum
+  // set up the cou
+  cpu_features_install();
   gdt_install();
   idt_install();
   irq_install();
@@ -89,10 +55,10 @@ void kmain(void) {
   process_create(NULL, NULL);
 
   // kernel inf
-  process_create(kernel_info, NULL);
+  // process_create(kernel_info, NULL);
 
   // shell
-  process_create(userspace_shell, NULL);
+  // process_create(userspace_shell, NULL);
 
   HALT();
 }

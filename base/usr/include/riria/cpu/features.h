@@ -20,3 +20,5 @@ static inline uint64_t read_cr4(void) {
 static inline void write_cr4(uint64_t value) {
   __asm__ volatile("mov %0, %%cr4" : : "r"(value) : "memory");
 }
+
+void cpu_features_install(void);
